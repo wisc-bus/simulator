@@ -1,0 +1,6 @@
+# Graph plotting
+jupyter
+matplotlib
+pandas
+geopandas
+descartes
