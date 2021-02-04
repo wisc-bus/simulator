@@ -4,6 +4,7 @@ from collections import defaultdict
 import heapq
 import pandas as pd
 import geopandas as gpd
+import logging
 
 
 class Node:
@@ -61,6 +62,9 @@ class NodeCostPair:
 
 class Graph:
     def __init__(self, df, start_time, elapse_time, max_walking_distance, avg_walking_speed):
+        self._logger = logging.getLogger('app')
+        self._logger.debug("start generating graph")
+
         self.df = df
         self.start_time = start_time
         self.elapse_time = elapse_time
@@ -70,14 +74,20 @@ class Graph:
         self.empty = False
         self._constuct_graph(max_walking_distance)
 
+        self._logger.debug(f"generated {len(self.nodes)} nodes in the graph")
+
     def get_gdf(self, start_stop=None, start_point=None):
         if self.empty:
             return
 
+        self._logger.debug("start locating starting stop")
         start = self._find_start(start_stop, start_point)
+        self._logger.debug("start clearing graph")
         self._clear_graph()
+        self._logger.debug("start runnning dijkstra")
         self._dijkstra(start)
 
+        self._logger.debug("start collecting nodes")
         rows = dict()
         start_time = pd.to_timedelta(self.start_time)
         end_time = start_time + pd.to_timedelta(self.elapse_time)
@@ -91,8 +101,10 @@ class Graph:
                                           node.stop_lat, radius]
         rows = [row for row in rows.values()]
 
+        self._logger.debug("start generating df")
         df = pd.DataFrame(
             rows, columns=['stop_id', 'stop_lon', 'stop_lat', 'radius'])
+        self._logger.debug("start generating gdf")
         gdf = gpd.GeoDataFrame(
             df, geometry=gpd.points_from_xy(df.stop_lon, df.stop_lat), crs="EPSG:4326")
 

@@ -1,7 +1,10 @@
 import pandas as pd
 import geopandas as gpd
 from busSim.graph import Graph
+from busSim.util import dprint
 import os
+import time
+import logging
 
 
 class BusSim:
@@ -43,6 +46,8 @@ class BusSim:
                 `(trip_id, delay in HH:MM:SS)`
 
         """
+        self._logger = logging.getLogger('app')
+        self._logger.info("Start initializing sim")
         self.data_path = data_path
         self.day = day
         self.start_time = start_time
@@ -53,6 +58,7 @@ class BusSim:
         self.stopTimes_final_df = self._gen_final_df(route_remove, trip_delays)
         self.graph = Graph(self.stopTimes_final_df, start_time,
                            elapse_time, self.max_walking_distance, avg_walking_speed)
+        self._logger.info("Sim successfully initialized")
 
     def get_gdf(self, start_stop=None, start_point=None):
         """Given a starting point(lat, lon) or a starting stop_id, compute the region covered in geopandas.Geodataframe
@@ -67,16 +73,20 @@ class BusSim:
             geopandas.GeoDataFrame: the GeoDataFrame of the region covered
 
         """
+        self._logger.info("Start searching graph")
+
         gdf = self.graph.get_gdf(start_stop, start_point)
         if gdf is None:
             return
 
+        self._logger.debug("start changing gdf encoding")
         gdf['geometry_centriod'] = gdf.geometry
 
         # https://epsg.io/3174
         gdf = gdf.to_crs(epsg=3174)
         gdf['geometry'] = gdf.geometry.buffer(gdf['radius'])
         gdf = gdf.to_crs(epsg=4326)
+        self._logger.info("Finish generating gdf")
         return gdf
 
     def get_area(self, gdf):
@@ -98,6 +108,8 @@ class BusSim:
         return gdf.unary_union.difference(lakes.unary_union).area
 
     def _gen_final_df(self, route_remove, trip_delays):
+        self._logger.debug("Start generating dataframe")
+
         mmt_gtfs_path = os.path.join(self.data_path, "mmt_gtfs")
         stops_df = pd.read_csv(os.path.join(
             mmt_gtfs_path, "stops.csv"), sep=",")
@@ -131,20 +143,23 @@ class BusSim:
             ["service_id", "route_short_name", "trip_id", "stop_id", "stop_sequence", "arrival_time", "shape_dist_traveled", "stop_lat", "stop_lon", "cardinal_direction"]]
 
         # get stop_times within the time frame
-        stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('24')), 'arrival_time'] = \
-            stopTimes_merged_df.arrival_time.str.replace('24', '00')
-        stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('25')), 'arrival_time'] = \
-            stopTimes_merged_df.arrival_time.str.replace('25', '01')
-        stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('26')), 'arrival_time'] = \
-            stopTimes_merged_df.arrival_time.str.replace('26', '02')
-        stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('27')), 'arrival_time'] = \
-            stopTimes_merged_df.arrival_time.str.replace('27', '03')
-        stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('28')), 'arrival_time'] = \
-            stopTimes_merged_df.arrival_time.str.replace('28', '04')
-        stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('29')), 'arrival_time'] = \
-            stopTimes_merged_df.arrival_time.str.replace('29', '05')
+        # t1 = time.time()
+        # stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('24')), 'arrival_time'] = \
+        #     stopTimes_merged_df.arrival_time.str.replace('24', '00')
+        # stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('25')), 'arrival_time'] = \
+        #     stopTimes_merged_df.arrival_time.str.replace('25', '01')
+        # stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('26')), 'arrival_time'] = \
+        #     stopTimes_merged_df.arrival_time.str.replace('26', '02')
+        # stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('27')), 'arrival_time'] = \
+        #     stopTimes_merged_df.arrival_time.str.replace('27', '03')
+        # stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('28')), 'arrival_time'] = \
+        #     stopTimes_merged_df.arrival_time.str.replace('28', '04')
+        # stopTimes_merged_df.loc[(stopTimes_merged_df.arrival_time.str.startswith('29')), 'arrival_time'] = \
+        #     stopTimes_merged_df.arrival_time.str.replace('29', '05')
         stopTimes_merged_df['arrival_time'] = pd.to_timedelta(
             stopTimes_merged_df['arrival_time'])
+        # t2 = time.time()
+        # print(t2-t1)
 
         # add trip_delays
         for (trip_id, delay) in trip_delays:
