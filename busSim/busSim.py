@@ -157,6 +157,7 @@ class BusSim:
         return stopTimes_final_df
 
     def _is_service_valid(self, day, service_id):
+        # FIXME: hardcode in the service to be 94
         return (day == 1) & (service_id.str.startswith("94"))
 
     def _get_valid_stopTime(self, df, start_time, elapse_time):
