@@ -79,12 +79,15 @@ class BusSim:
         if gdf is None:
             return
 
-        self._logger.debug("start changing gdf encoding")
+        self._logger.debug("start finding centriod")
         gdf['geometry_centriod'] = gdf.geometry
 
+        self._logger.debug("start changing encoding to 3174")
         # https://epsg.io/3174
         gdf = gdf.to_crs(epsg=3174)
+        self._logger.debug("start generating geometry buffer with radius")
         gdf['geometry'] = gdf.geometry.buffer(gdf['radius'])
+        self._logger.debug("start changing encoding back to 4326")
         gdf = gdf.to_crs(epsg=4326)
         self._logger.info("Finish generating gdf")
         return gdf
@@ -99,13 +102,19 @@ class BusSim:
             float: the total area in meters^2
 
         """
+        if gdf is None:
+            return
+
         # the area returned is in meters^2
+        self._logger.info("start calculating area")
         lake_path = os.path.join(
             self.data_path, "plot", "background", "water-shp")
         lakes = gpd.read_file(lake_path)
         lakes = lakes.to_crs(epsg=3174)
         gdf = gdf.to_crs(epsg=3174)
-        return gdf.unary_union.difference(lakes.unary_union).area
+        area = gdf.unary_union.difference(lakes.unary_union).area
+        self._logger.info("finish calculating area")
+        return area
 
     def _gen_final_df(self, route_remove, trip_delays):
         self._logger.debug("Start generating dataframe")
