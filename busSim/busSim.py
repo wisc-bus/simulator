@@ -109,9 +109,15 @@ class BusSim:
         self._logger.info("start calculating area")
         lake_path = os.path.join(
             self.data_path, "plot", "background", "water-shp")
+
+        self._logger.debug("start reading in lake with 3174 encoding")
         lakes = gpd.read_file(lake_path)
         lakes = lakes.to_crs(epsg=3174)
+
+        self._logger.debug("start changing encoding to 3174")
         gdf = gdf.to_crs(epsg=3174)
+
+        self._logger.debug("start calculating union/difference")
         area = gdf.unary_union.difference(lakes.unary_union).area
         self._logger.info("finish calculating area")
         return area
