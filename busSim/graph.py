@@ -76,7 +76,9 @@ class Graph:
 
         self._logger.debug(f"generated {len(self.nodes)} nodes in the graph")
 
-    def get_gdf(self, start_stop=None, start_point=None):
+    # return the area coverage data after performing graph search
+    # return format: [{“stop_id”, “stop_lon”, “stop_lat”, “radius”}, ... ]
+    def search(self, start_stop=None, start_point=None):
         if self.empty:
             return
 
@@ -88,7 +90,7 @@ class Graph:
         self._dijkstra(start)
 
         self._logger.debug("start collecting nodes")
-        rows = dict()
+        stops_radius_dict = dict()
         start_time = pd.to_timedelta(self.start_time)
         end_time = start_time + pd.to_timedelta(self.elapse_time)
         for node in self.nodes:
@@ -96,19 +98,16 @@ class Graph:
                 radius = self.max_walking_distance - node.walking_distance
                 time_left = (end_time - node.arrival_time).total_seconds()
                 radius = min(radius, self.avg_walking_speed * time_left)
-                if node.stop_id not in rows or radius > rows[node.stop_id][3]:
-                    rows[node.stop_id] = [node.stop_id, node.stop_lon,
-                                          node.stop_lat, radius]
-        rows = [row for row in rows.values()]
+                if node.stop_id not in stops_radius_dict or radius > stops_radius_dict[node.stop_id]["radius"]:
+                    stops_radius_dict[node.stop_id] = {
+                        "stop_id": node.stop_id,
+                        "stop_lon": node.stop_lon,
+                        "stop_lat": node.stop_lat,
+                        "radius": radius
+                    }
 
-        self._logger.debug("start generating df")
-        df = pd.DataFrame(
-            rows, columns=['stop_id', 'stop_lon', 'stop_lat', 'radius'])
-        self._logger.debug("start generating gdf")
-        gdf = gpd.GeoDataFrame(
-            df, geometry=gpd.points_from_xy(df.stop_lon, df.stop_lat), crs="EPSG:4326")
-
-        return gdf
+        stops_radius_list = [row for row in stops_radius_dict.values()]
+        return stops_radius_list
 
     def _clear_graph(self):
         for node in self.nodes:

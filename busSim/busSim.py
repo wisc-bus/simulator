@@ -74,10 +74,15 @@ class BusSim:
 
         """
         self._logger.info("Start searching graph")
+        stops_radius_list = self.graph.search(start_stop, start_point)
 
-        gdf = self.graph.get_gdf(start_stop, start_point)
-        if gdf is None:
+        if stops_radius_list is None or len(stops_radius_list) == 0:
             return
+
+        self._logger.debug("start generating gdf")
+        df = pd.DataFrame(stops_radius_list)
+        gdf = gpd.GeoDataFrame(
+            df, geometry=gpd.points_from_xy(df.stop_lon, df.stop_lat), crs="EPSG:4326")
 
         self._logger.debug("start finding centriod")
         gdf['geometry_centriod'] = gdf.geometry
