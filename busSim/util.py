@@ -18,10 +18,14 @@ def parse_log_line(line):
     return timestamp, level, msg
 
 
+def to_millisecs(timedelta):
+    return timedelta.total_seconds() * 1000
+
+
 def get_perf(log_path):
 
     perf = pd.DataFrame()
-    graph_search = projections = uninioning = 0
+    graph_search = projections = uninioning = None
     graph_search_ts = projections_ts = uninioning_ts = None
     i = 0
 
@@ -44,10 +48,10 @@ def get_perf(log_path):
                 # print(4)
                 uninioning = timestamp - uninioning_ts
                 # flush all previous results
-                perf.loc[i, "graph_search"] = graph_search
-                perf.loc[i, "projections"] = projections
-                perf.loc[i, "uninioning"] = uninioning
-                graph_search = projections = uninioning = 0
+                perf.loc[i, "graph_search"] = to_millisecs(graph_search)
+                perf.loc[i, "projections"] = to_millisecs(projections)
+                perf.loc[i, "uninioning"] = to_millisecs(uninioning)
+                graph_search = projections = uninioning = None
                 graph_search_ts = projections_ts = uninioning_ts = None
                 i += 1
 
