@@ -93,16 +93,12 @@ class BusSim:
         gdf = gpd.GeoDataFrame(
             df, geometry=gpd.points_from_xy(df.stop_x, df.stop_y), crs="EPSG:3174")
 
+        # TODO: use x, y directly
         self._logger.debug("start finding centriod")
         gdf['geometry_centriod'] = gdf.geometry
 
-        # self._logger.debug("start changing encoding to 3174")
-        # # https://epsg.io/3174
-        # gdf = gdf.to_crs(epsg=3174)
         self._logger.debug("start generating geometry buffer with radius")
         gdf['geometry'] = gdf.geometry.buffer(gdf['radius'])
-        self._logger.debug("start changing encoding back to 4326")
-        gdf = gdf.to_crs(epsg=4326)
         self._logger.info("Finish generating gdf")
         return gdf
 
@@ -121,9 +117,6 @@ class BusSim:
 
         # the area returned is in meters^2
         self._logger.info("start calculating area")
-
-        self._logger.debug("start changing encoding to 3174")
-        gdf = gdf.to_crs(epsg=3174)
 
         self._logger.debug("start calculating union/difference")
         area = gdf.unary_union.difference(self.lakes.unary_union).area
