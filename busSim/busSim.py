@@ -58,6 +58,10 @@ class BusSim:
         self.stopTimes_final_df = self._gen_final_df(route_remove, trip_delays)
         self.graph = Graph(self.stopTimes_final_df, start_time,
                            elapse_time, self.max_walking_distance, avg_walking_speed)
+
+        lake_path = os.path.join(
+            self.data_path, "plot", "background", "water-meter-shp")
+        self.lakes = gpd.read_file(lake_path)
         self._logger.info("Sim successfully initialized")
 
     def get_gdf(self, start_stop=None, start_point=None):
@@ -117,18 +121,12 @@ class BusSim:
 
         # the area returned is in meters^2
         self._logger.info("start calculating area")
-        lake_path = os.path.join(
-            self.data_path, "plot", "background", "water-shp")
-
-        self._logger.debug("start reading in lake with 3174 encoding")
-        lakes = gpd.read_file(lake_path)
-        lakes = lakes.to_crs(epsg=3174)
 
         self._logger.debug("start changing encoding to 3174")
         gdf = gdf.to_crs(epsg=3174)
 
         self._logger.debug("start calculating union/difference")
-        area = gdf.unary_union.difference(lakes.unary_union).area
+        area = gdf.unary_union.difference(self.lakes.unary_union).area
         self._logger.info("finish calculating area")
         return area
 
