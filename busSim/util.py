@@ -62,8 +62,11 @@ def get_perf(log_path):
 
 
 # for transforming CRS
-def get_transformer(from_code=4326, to_code=3174):
-    from_crs = CRS.from_epsg(from_code)
-    to_crs = CRS.from_epsg(to_code)
+_transformer = None
 
-    return Transformer.from_crs(from_crs, to_crs)
+
+def transform(lat, lon):
+    global _transformer
+    if _transformer is None:
+        _transformer = Transformer.from_crs(4326, 3174)
+    return _transformer.transform(lat, lon)

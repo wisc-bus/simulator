@@ -8,18 +8,22 @@ import logging
 
 
 class Node:
-    def __init__(self, trip_id, stop_sequence, stop_id, stop_lat, stop_lon, arrival_time, max_walking_distance):
+    def __init__(self, trip_id, stop_sequence, stop_id, stop_x, stop_y, arrival_time, max_walking_distance):
         self.trip_id = trip_id
         self.stop_sequence = stop_sequence
         self.stop_id = stop_id
-        self.stop_lat = stop_lat
-        self.stop_lon = stop_lon
+        self.stop_x = stop_x
+        self.stop_y = stop_y
         self.arrival_time = arrival_time
         # this should be modified by search in graph
         self.walking_distance = max_walking_distance
         self.children = []
 
     def distance(self, other):
+        return sqrt((other.stop_x - self.stop_x)**2 + (other.stop_y - self.stop_y)**2)
+
+    # Deprecated
+    def harversine_distance(self, other):
         """Calculates the distance between two points on earth using the
         harversine distance (distance between points on a sphere)
         See: https://en.wikipedia.org/wiki/Haversine_formula
@@ -37,7 +41,7 @@ class Node:
         return d
 
     def __str__(self):
-        return f"trip_id: {self.trip_id} stop_sequence: {self.stop_sequence} stop_id: {self.stop_id} stop_lat: {self.stop_lat} stop_lon: {self.stop_lon} arrival_time: {self.arrival_time} walking_distance: {self.walking_distance}"
+        return f"trip_id: {self.trip_id} stop_sequence: {self.stop_sequence} stop_id: {self.stop_id} stop_x: {self.stop_x} stop_y: {self.stop_y} arrival_time: {self.arrival_time} walking_distance: {self.walking_distance}"
 
     def __repr__(self):
         rv = self.__str__()
@@ -72,12 +76,12 @@ class Graph:
         self.avg_walking_speed = avg_walking_speed
         self.nodes = []
         self.empty = False
-        self._constuct_graph(max_walking_distance)
+        self._constuct_graph()
 
         self._logger.debug(f"generated {len(self.nodes)} nodes in the graph")
 
     # return the area coverage data after performing graph search
-    # return format: [{“stop_id”, “stop_lon”, “stop_lat”, “radius”}, ... ]
+    # return format: [{“stop_id”, “stop_y”, “stop_x”, “radius”}, ... ]
     def search(self, start_stop=None, start_point=None):
         if self.empty:
             return
@@ -101,8 +105,8 @@ class Graph:
                 if node.stop_id not in stops_radius_dict or radius > stops_radius_dict[node.stop_id]["radius"]:
                     stops_radius_dict[node.stop_id] = {
                         "stop_id": node.stop_id,
-                        "stop_lon": node.stop_lon,
-                        "stop_lat": node.stop_lat,
+                        "stop_x": node.stop_x,
+                        "stop_y": node.stop_y,
                         "radius": radius
                     }
 
@@ -131,7 +135,7 @@ class Graph:
                     child.walking_distance = distance
                     heapq.heappush(pq, (distance, child))
 
-    def _constuct_graph(self, max_walking_distance):
+    def _constuct_graph(self):
         if len(self.df) == 0:
             self.empty = True
             return
@@ -141,30 +145,30 @@ class Graph:
         stop_node_dict = defaultdict(list)
 
         map_grid = []
-        lat_stepsize = max_walking_distance / 11.1 * 0.0001
-        lon_stepsize = max_walking_distance / 8.1 * 0.0001
-        min_lat = self.df.stop_lat.min()
-        max_lat = self.df.stop_lat.max()
-        min_lon = self.df.stop_lon.min()
-        max_lon = self.df.stop_lon.max()
+        min_x = self.df.stop_x.min()
+        max_x = self.df.stop_x.max()
+        min_y = self.df.stop_y.min()
+        max_y = self.df.stop_y.max()
 
-        lat_num = ceil((max_lat - min_lat) / lat_stepsize)
-        lon_num = ceil((max_lon - min_lon) / lon_stepsize)
-        for i in range(lat_num):
-            lat_list = []
-            for j in range(lon_num):
-                lat_list.append([])
-            map_grid.append(lat_list)
+        x_num = ceil((max_x - min_x) / self.max_walking_distance)
+        y_num = ceil((max_y - min_y) / self.max_walking_distance)
+        for i in range(x_num):
+            x_list = []
+            for j in range(y_num):
+                x_list.append([])
+            map_grid.append(x_list)
 
         for index, row in self.df.iterrows():
-            node = Node(row["trip_id"], row["stop_sequence"], row["stop_id"], row["stop_lat"],
-                        row["stop_lon"], row["arrival_time"], self.max_walking_distance)
+            node = Node(row["trip_id"], row["stop_sequence"], row["stop_id"], row["stop_x"],
+                        row["stop_y"], row["arrival_time"], self.max_walking_distance)
             self.nodes.append(node)
             trip_node_dict[row["trip_id"]].append(node)
             stop_node_dict[row["stop_id"]].append(node)
-            lat_bucket = floor((row["stop_lat"] - min_lat) / lat_stepsize)
-            lon_bucket = floor((row["stop_lon"] - min_lon) / lon_stepsize)
-            map_grid[lat_bucket][lon_bucket].append(node)
+            x_bucket = floor((row["stop_x"] - min_x) /
+                             self.max_walking_distance)
+            y_bucket = floor((row["stop_y"] - min_y) /
+                             self.max_walking_distance)
+            map_grid[x_bucket][y_bucket].append(node)
 
         # gen edges
         # direct sequence
@@ -185,13 +189,13 @@ class Graph:
                     start.children.append(nodeCostPair)
 
         # walk
-        for lat in range(lat_num):
-            for lon in range(lon_num):
-                start_bucket = map_grid[lat][lon]
+        for x in range(x_num):
+            for y in range(y_num):
+                start_bucket = map_grid[x][y]
                 end_buckets = []
-                for lat_end in range(max(0, lat-1), min(lat_num, lat+2)):
-                    for lon_end in range(max(0, lon-1), min(lon_num, lon+2)):
-                        end_buckets.append(map_grid[lat_end][lon_end])
+                for x_end in range(max(0, x-1), min(x_num, x+2)):
+                    for y_end in range(max(0, y-1), min(y_num, y+2)):
+                        end_buckets.append(map_grid[x_end][y_end])
 
                 for start in start_bucket:
                     for end_bucket in end_buckets:
@@ -217,12 +221,12 @@ class Graph:
     def _find_start_stop(self, start_stop):
         for node in self.nodes:
             if node.stop_id == start_stop:
-                start_point = (node.stop_lat, node.stop_lon)
+                start_point = (node.stop_x, node.stop_y)
                 return self._find_start_point(start_point)
 
     def _find_start_point(self, start_point):
-        lat, lon = start_point
-        start = Node(None, None, None, lat, lon,
+        x, y = start_point
+        start = Node(None, None, None, x, y,
                      pd.to_timedelta(self.start_time), 0)
 
         # gen edges by walking
