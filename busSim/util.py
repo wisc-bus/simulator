@@ -1,6 +1,8 @@
 import pandas as pd
 from datetime import datetime
+from pyproj import CRS, Transformer
 
+# for quick debugging
 debug = True
 
 
@@ -9,6 +11,7 @@ def dprint(cmd):
         print(cmd)
 
 
+# for parsing perf logs
 def parse_log_line(line):
     line = line.strip()
     tokens = line.split(" - ")
@@ -56,3 +59,15 @@ def get_perf(log_path):
                 i += 1
 
     return perf
+
+
+# for transforming CRS
+# https://epsg.io/3174
+_transformer = None
+
+
+def transform(lat, lon):
+    global _transformer
+    if _transformer is None:
+        _transformer = Transformer.from_crs(4326, 3174)
+    return _transformer.transform(lat, lon)
