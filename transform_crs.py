@@ -24,6 +24,26 @@ def transform_lake():
     lakes.to_file("./data/plot/background/water-meter-shp/water-meter.shp")
 
 
+def transform_city():
+    city = gpd.read_file("./data/plot/background/madison-shp")
+    city = city.to_crs(epsg=3174)
+
+    if not os.path.exists('./data/plot/background/madison-meter-shp'):
+        os.makedirs('./data/plot/background/madison-meter-shp')
+    city.to_file("./data/plot/background/madison-meter-shp/madison-meter.shp")
+
+
+def transform_street():
+    street = gpd.read_file("./data/plot/background/street-shp")
+    street = street.to_crs(epsg=3174)
+
+    if not os.path.exists('./data/plot/background/street-meter-shp'):
+        os.makedirs('./data/plot/background/street-meter-shp')
+    street.to_file("./data/plot/background/street-meter-shp/street-meter.shp")
+
+
 if __name__ == "__main__":
     # transform_stop()
-    transform_lake()
+    # transform_lake()
+    # transform_city()
+    transform_street()
