@@ -63,6 +63,24 @@ class BusSim:
         self._load_map()
         self._logger.info("Sim successfully initialized")
 
+    @classmethod
+    def run(cls, config):
+        """Execute sim from a config object
+
+        Here is an example of such config object
+        {
+            "data_path": "PATH",
+            "day": "monday",
+            "interval": 10,  # min
+            "elapse_time": 30,  # min
+            "avg_walking_speed": 1.4,  # meters per second
+            "max_walking_min": 10,  # optional
+            "route_ko": True
+        }
+        """
+        pass
+        # return cls()
+
     def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2):
         grid_size = grid_size_min * self.avg_walking_speed * 60
         x_num = ceil(abs(self.max_x - self.min_x) / grid_size)
