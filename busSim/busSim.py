@@ -1,7 +1,8 @@
 import pandas as pd
 import geopandas as gpd
 from busSim.graph import Graph
-from busSim.util import dprint, transform
+from busSim.util import dprint, transform, gen_start_time
+from busSim.result import Result
 import os
 import time
 import logging
@@ -65,21 +66,40 @@ class BusSim:
 
     @classmethod
     def run(cls, config):
-        """Execute sim from a config object
+        """Execute sim with route_ko from a config dict
 
-        Here is an example of such config object
+        Here is an example of such config dict
         {
             "data_path": "PATH",
             "day": "monday",
-            "interval": 10,  # min
-            "elapse_time": 30,  # min
-            "avg_walking_speed": 1.4,  # meters per second
-            "max_walking_min": 10,  # optional
-            "route_ko": True
+            "start_time": "12:00:00",
+            "elapse_time": 30, #min
+            "start_points": [(43.073691, -89.387407)]
+            "avg_walking_speed": 1.4, #meters per second
+            "max_walking_min": 10, #optional
+            "grid_size_min": 2
         }
         """
-        pass
-        # return cls()
+        # check config dict
+        required_fields = ["data_path", "day", "start_time",
+                           "elapse_time", "start_points", "avg_walking_speed"]
+        if not all(field in config for field in required_fields):
+            raise Exception("Invalid config dict")
+        if "max_walking_min" not in config:
+            config["max_walking_min"] = config["elapse_time"]
+        if "grid_size_min" not in config:
+            config["grid_size_min"] = 2
+
+        # init busSim
+        busSim = cls(config["data_path"], config["day"], config["start_time"], config["elapse_time"],
+                     config["avg_walking_speed"], config["max_walking_min"])
+        result = Result(config)
+
+        # run busSim search on every start_point
+        for start_point in config["start_points"]:
+            grid = busSim.get_access_grid(
+                start_point=start_point, grid_size_min=config["grid_size_min"])
+            result.record(start_point, grid)
 
     def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2):
         grid_size = grid_size_min * self.avg_walking_speed * 60
@@ -246,7 +266,6 @@ class BusSim:
         self.min_x = city.bounds.minx.min()
         self.max_y = city.bounds.maxy.max()
         self.min_y = city.bounds.miny.min()
-        # print(self.max_x, self.min_x, self.max_y, self.min_y)
 
     def _is_service_valid(self, day, service_id):
         # FIXME: hardcode in the service to be 94

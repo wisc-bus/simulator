@@ -11,6 +11,21 @@ def dprint(cmd):
         print(cmd)
 
 
+def fmin(minutes):
+    return f"{minutes // 60}:{minutes % 60}:00"
+
+
+def gen_start_time(interval, elapse_time):
+    start_times = []
+    curr = 0
+    min_total = 24 * 60 - elapse_time
+    while curr <= min_total:
+        start_times.append(fmin(curr))
+        curr += interval
+
+    return start_times
+
+
 # for parsing perf logs
 def parse_log_line(line):
     line = line.strip()
@@ -71,3 +86,13 @@ def transform(lat, lon):
     if _transformer is None:
         _transformer = Transformer.from_crs(4326, 3174)
     return _transformer.transform(lat, lon)
+
+# for serializing grid to bitmap string
+
+
+def serialize_grid():
+    pass
+
+
+def deserialize_grid():
+    pass
