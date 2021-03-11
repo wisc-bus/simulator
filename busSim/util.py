@@ -1,6 +1,8 @@
 import pandas as pd
 from datetime import datetime
 from pyproj import CRS, Transformer
+import os
+import random
 
 # for quick debugging
 debug = True
@@ -24,6 +26,25 @@ def gen_start_time(interval, elapse_time):
         curr += interval
 
     return start_times
+
+
+def gen_locations(data_path, num):
+    mmt_gtfs_path = os.path.join(data_path, "mmt_gtfs")
+    stops_df = pd.read_csv(os.path.join(
+        mmt_gtfs_path, "stops.csv"), sep=",")
+    locations = []
+
+    lat_min = stops_df.stop_lat.min()
+    lat_max = stops_df.stop_lat.max()
+    lon_min = stops_df.stop_lon.min()
+    lon_max = stops_df.stop_lon.max()
+
+    for i in range(num):
+        lat = random.random() * (lat_max - lat_min) + lat_min
+        lon = random.random() * (lon_max - lon_min) + lon_min
+        locations.append((lat, lon))
+
+    return locations
 
 
 # for parsing perf logs

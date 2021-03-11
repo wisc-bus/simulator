@@ -17,8 +17,8 @@ class BusSim:
         day,
         start_time,
         elapse_time,
-        avg_walking_speed,
-        max_walking_min,
+        avg_walking_speed=1.4,
+        max_walking_min=-1,  # HACK
         route_remove=[],
         trip_delays=[]
     ):
@@ -55,6 +55,10 @@ class BusSim:
         self.start_time = start_time
         self.elapse_time = elapse_time
         self.avg_walking_speed = avg_walking_speed
+
+        # HACK
+        if max_walking_min == -1:
+            max_walking_min = elapse_time
         self.max_walking_min = max_walking_min
         self.max_walking_distance = max_walking_min * 60.0 * avg_walking_speed
         self.stopTimes_final_df = self._gen_final_df(route_remove, trip_delays)
@@ -75,9 +79,9 @@ class BusSim:
             "start_time": "12:00:00",
             "elapse_time": 30, #min
             "start_points": [(43.073691, -89.387407)]
-            "avg_walking_speed": 1.4, #meters per second
+            "avg_walking_speed": 1.4, ##optional
             "max_walking_min": 10, #optional
-            "grid_size_min": 2
+            "grid_size_min": 2 #optional
         }
         """
         # check config dict
@@ -87,12 +91,16 @@ class BusSim:
             raise Exception("Invalid config dict")
         if "max_walking_min" not in config:
             config["max_walking_min"] = config["elapse_time"]
+        if "avg_walking_speed" not in config:
+            config["avg_walking_speed"] = 1.4
         if "grid_size_min" not in config:
             config["grid_size_min"] = 2
 
         # init busSim
         busSim = cls(config["data_path"], config["day"], config["start_time"], config["elapse_time"],
                      config["avg_walking_speed"], config["max_walking_min"])
+        config["x_num"], config["y_num"], _ = busSim._get_grid_dimention(
+            config["grid_size_min"])
         result = Result(config)
 
         # run busSim search on every start_point
@@ -101,10 +109,16 @@ class BusSim:
                 start_point=start_point, grid_size_min=config["grid_size_min"])
             result.record(start_point, grid)
 
+        return result
+
     def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2):
-        grid_size = grid_size_min * self.avg_walking_speed * 60
-        x_num = ceil(abs(self.max_x - self.min_x) / grid_size)
-        y_num = ceil(abs(self.max_y - self.min_y) / grid_size)
+        x_num, y_num, grid_size = self._get_grid_dimention(grid_size_min)
+        grid = []
+        for y in range(y_num):
+            row = []
+            for x in range(x_num):
+                row.append(0)
+            grid.append(row)
 
         self._logger.info("Start searching graph")
         # first convert start_point into meters
@@ -113,15 +127,9 @@ class BusSim:
         stops_radius_list = self.graph.search(start_stop, start_point)
 
         if stops_radius_list is None or len(stops_radius_list) == 0:
-            return
+            return grid
 
         self._logger.info("Start compressing")
-        grid = []
-        for y in range(y_num):
-            row = []
-            for x in range(x_num):
-                row.append(0)
-            grid.append(row)
 
         for bubble in stops_radius_list:
             min_x_idx = floor(
@@ -275,3 +283,9 @@ class BusSim:
         start_time = pd.to_timedelta(start_time)
         end_time = start_time + pd.to_timedelta(elapse_time)
         return df[(df['arrival_time'] > start_time) & (df['arrival_time'] < end_time)]
+
+    def _get_grid_dimention(self, grid_size_min):
+        grid_size = grid_size_min * self.avg_walking_speed * 60
+        x_num = ceil(abs(self.max_x - self.min_x) / grid_size)
+        y_num = ceil(abs(self.max_y - self.min_y) / grid_size)
+        return x_num, y_num, grid_size
