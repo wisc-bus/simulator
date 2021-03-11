@@ -18,7 +18,14 @@ class Result():
         self.data_block_size = (self.x_num * self.y_num + 7) // 8
 
     def record(self, start_point, grid):
-        self._serialize_grid(grid)
+        data = self._serialize_grid(grid)
+        self.data.append(data)
+
+    def save(self, filename):
+        # header = self._serialize_header()
+        with open(filename, "wb") as f:
+            for data in self.data:
+                f.write(data)
 
     def _serialize_grid(self, grid):
         data = bytearray(self.data_block_size)
@@ -27,10 +34,7 @@ class Result():
                 if bit == 1:
                     pos = y * self.x_num + x
                     data[pos // 8] |= self.BITMASK[pos % 8]
-        self.data.append(data)
+        return data
 
-    def __str__(self):
-        return super().__str__()
-
-    def to_packet(self):
+    def _serialize_header(self):
         pass

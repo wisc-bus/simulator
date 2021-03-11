@@ -75,6 +75,7 @@ class BusSim:
         Here is an example of such config dict
         {
             "data_path": "PATH",
+            "output_path": "PATH",
             "day": "monday",
             "start_time": "12:00:00",
             "elapse_time": 30, #min
@@ -85,7 +86,7 @@ class BusSim:
         }
         """
         # check config dict
-        required_fields = ["data_path", "day", "start_time",
+        required_fields = ["data_path", "output_path",  "day", "start_time",
                            "elapse_time", "start_points", "avg_walking_speed"]
         if not all(field in config for field in required_fields):
             raise Exception("Invalid config dict")
@@ -109,7 +110,7 @@ class BusSim:
                 start_point=start_point, grid_size_min=config["grid_size_min"])
             result.record(start_point, grid)
 
-        return result
+        result.save(config["output_path"])
 
     def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2):
         x_num, y_num, grid_size = self._get_grid_dimention(grid_size_min)
