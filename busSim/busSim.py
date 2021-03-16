@@ -3,8 +3,7 @@ import geopandas as gpd
 from busSim.graph import Graph
 from busSim.util import dprint, transform, gen_start_time
 from busSim.result import Result
-import os
-import time
+from busSim.fileManager import LocalManager, AWSManager
 import logging
 from math import ceil, floor, sqrt
 
@@ -20,7 +19,8 @@ class BusSim:
         avg_walking_speed=1.4,
         max_walking_min=-1,  # HACK
         route_remove=[],
-        trip_delays=[]
+        trip_delays=[],
+        backend="local"
     ):
         """The constructor of the BusSim class
 
@@ -50,7 +50,7 @@ class BusSim:
         """
         self._logger = logging.getLogger('app')
         self._logger.info("Start initializing sim")
-        self.data_path = data_path
+        self.fileManager = self._get_fileManager(backend, data_path)
         self.day = day
         self.start_time = start_time
         self.elapse_time = elapse_time
@@ -217,15 +217,10 @@ class BusSim:
     def _gen_final_df(self, route_remove, trip_delays):
         self._logger.debug("Start generating dataframe")
 
-        mmt_gtfs_path = os.path.join(self.data_path, "mmt_gtfs")
-        stops_df = pd.read_csv(os.path.join(
-            mmt_gtfs_path, "stops-3174.csv"), sep=",")
-        trips_df = pd.read_csv(os.path.join(
-            mmt_gtfs_path, "trips.csv"), sep=",")
-        stopTimes_df = pd.read_csv(os.path.join(
-            mmt_gtfs_path, "stop_times.csv"), sep=",")
-        calendar_df = pd.read_csv(os.path.join(
-            mmt_gtfs_path, "calendar.csv"), sep=",")
+        stops_df = self.fileManager.read_csv("stops-3174.csv")
+        trips_df = self.fileManager.read_csv("trips.csv")
+        stopTimes_df = self.fileManager.read_csv("stop_times.csv")
+        calendar_df = self.fileManager.read_csv("calendar.csv")
 
         # get valid service_ids
         calendar_df['start_date'] = pd.to_datetime(
@@ -263,14 +258,17 @@ class BusSim:
 
         return stopTimes_final_df
 
-    def _load_map(self):
-        lake_path = os.path.join(
-            self.data_path, "plot", "background", "water-meter-shp")
-        city_path = os.path.join(
-            self.data_path, "plot", "background", "madison-meter-shp")
-        city = gpd.read_file(city_path)
+    def _get_fileManager(self, backend, data_path):
+        managers = {
+            "local": lambda: LocalManager(data_path)
+        }
+        if backend not in managers:
+            raise Exception('Invalid Backend')
+        return managers.get(backend)()
 
-        self.lakes = gpd.read_file(lake_path)
+    def _load_map(self):
+        city = self.fileManager.read_shape("madison-meter-shp")
+        self.lakes = self.fileManager.read_shape("water-meter-shp")
         self.max_x = city.bounds.maxx.max()
         self.min_x = city.bounds.minx.min()
         self.max_y = city.bounds.maxy.max()
