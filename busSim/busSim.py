@@ -1,9 +1,9 @@
 import pandas as pd
 import geopandas as gpd
-from busSim.graph import Graph
-from busSim.util import dprint, transform, gen_start_time
-from busSim.result import Result
-from busSim.fileManager import LocalManager, AWSManager
+from .graph import Graph
+from .util import dprint, transform, gen_start_time
+from .result import Result
+from .fileManager import LocalManager, AWSManager
 import logging
 from math import ceil, floor, sqrt
 

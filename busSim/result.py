@@ -1,14 +1,17 @@
 import os
+from .util import tomin
 
 
 class Result():
     BITMASK = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80]
+    DAY = ["monday", "tuesday", "wednesday",
+           "thursday", "friday", "saturday", "sunday"]
 
     def __init__(self, config):
         self.data = []
-        self.day = config["day"]
-        self.start_time = config["start_time"]
-        self.elapse_time = config["elapse_time"]
+        self.day = self.DAY.index(config["day"])
+        self.start_time = tomin(config["start_time"])
+        self.elapse_time = tomin(config["elapse_time"])
         self.start_points = config["start_points"]
         self.avg_walking_speed = config["avg_walking_speed"]
         self.max_walking_min = config["max_walking_min"]
@@ -22,8 +25,9 @@ class Result():
         self.data.append(data)
 
     def save(self, filename):
-        # header = self._serialize_header()
+        header = self._serialize_header()
         with open(filename, "wb") as f:
+            f.write(header)
             for data in self.data:
                 f.write(data)
 
@@ -37,4 +41,10 @@ class Result():
         return data
 
     def _serialize_header(self):
-        pass
+        return self.day.to_bytes(1, byteorder='big') + \
+            self.start_time.to_bytes(2, byteorder='big') + \
+            self.elapse_time.to_bytes(1, byteorder='big') + \
+            self.max_walking_min.to_bytes(1, byteorder='big') + \
+            self.grid_size_min.to_bytes(1, byteorder='big') + \
+            self.x_num.to_bytes(2, byteorder='big') + \
+            self.y_num.to_bytes(2, byteorder='big')

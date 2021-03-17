@@ -17,6 +17,13 @@ def fmin(minutes):
     return f"{minutes // 60}:{minutes % 60}:00"
 
 
+def tomin(time_string):
+    time_li = time_string.split(":")
+    h = int(time_li[0])
+    m = int(time_li[1])
+    return h * 60 + m
+
+
 def gen_start_time(interval, elapse_time):
     start_times = []
     curr = 0
