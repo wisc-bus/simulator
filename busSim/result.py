@@ -8,11 +8,11 @@ class Result():
            "thursday", "friday", "saturday", "sunday"]
 
     def __init__(self, config):
-        self.data = []
+        self.data = b''
         self.day = self.DAY.index(config["day"])
         self.start_time = tomin(config["start_time"])
         self.elapse_time = tomin(config["elapse_time"])
-        self.start_points = config["start_points"]
+        # self.start_points = config["start_points"]
         self.avg_walking_speed = config["avg_walking_speed"]
         self.max_walking_min = config["max_walking_min"]
         self.grid_size_min = config["grid_size_min"]
@@ -22,14 +22,11 @@ class Result():
 
     def record(self, start_point, grid):
         data = self._serialize_grid(grid)
-        self.data.append(data)
+        self.data += data
 
-    def save(self, filename):
+    def to_bytes(self):
         header = self._serialize_header()
-        with open(filename, "wb") as f:
-            f.write(header)
-            for data in self.data:
-                f.write(data)
+        return header + self.data
 
     def _serialize_grid(self, grid):
         data = bytearray(self.data_block_size)

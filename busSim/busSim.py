@@ -12,15 +12,14 @@ class BusSim:
 
     def __init__(
         self,
-        data_path,
+        manager,
         day,
         start_time,
         elapse_time,
         avg_walking_speed=1.4,
         max_walking_min=-1,  # HACK
         route_remove=[],
-        trip_delays=[],
-        backend="local"
+        trip_delays=[]
     ):
         """The constructor of the BusSim class
 
@@ -50,7 +49,7 @@ class BusSim:
         """
         self._logger = logging.getLogger('app')
         self._logger.info("Start initializing sim")
-        self.fileManager = self._get_fileManager(backend, data_path)
+        self.manager = manager
         self.day = day
         self.start_time = start_time
         self.elapse_time = elapse_time
@@ -74,43 +73,68 @@ class BusSim:
 
         Here is an example of such config dict
         {
-            "data_path": "PATH",
-            "output_path": "PATH",
-            "day": "monday",
-            "start_time": "12:00:00",
-            "elapse_time": 30, #min
-            "start_points": [(43.073691, -89.387407)]
-            "avg_walking_speed": 1.4, ##optional
-            "max_walking_min": 10, #optional
-            "grid_size_min": 2 #optional
+            "run_env": {
+                "backend": "local", # aws
+                "credentials": {
+                    "data_path": "PATH",
+                    "output_path": "PATH",
+                    "api_key": "YOUR_API_KEY" # required for aws
+                }
+            },
+            "busSim_params": {
+                "day": "monday",
+                "start_time": "12:00:00",
+                "elapse_time": 30, #min,
+                "avg_walking_speed": 1.4, ##optional
+                "max_walking_min": 10, #optional
+                "grid_size_min": 2 #optional
+            }, 
+            "start_points": [(43.073691, -89.387407)],
+            "route_remove": [80]
         }
         """
         # check config dict
-        required_fields = ["data_path", "output_path",  "day", "start_time",
-                           "elapse_time", "start_points", "avg_walking_speed"]
+        required_fields = ["run_env", "busSim_params",  "start_points"]
         if not all(field in config for field in required_fields):
             raise Exception("Invalid config dict")
-        if "max_walking_min" not in config:
-            config["max_walking_min"] = config["elapse_time"]
-        if "avg_walking_speed" not in config:
-            config["avg_walking_speed"] = 1.4
-        if "grid_size_min" not in config:
-            config["grid_size_min"] = 2
+
+        busSim_params = config["busSim_params"]
+        if "max_walking_min" not in busSim_params:
+            busSim_params["max_walking_min"] = busSim_params["elapse_time"]
+        if "avg_walking_speed" not in busSim_params:
+            busSim_params["avg_walking_speed"] = 1.4
+        if "grid_size_min" not in busSim_params:
+            busSim_params["grid_size_min"] = 2
+
+        # TODO: make use of route_remove
+
+        # dynamically init a manager
+        backend = config["run_env"]["backend"]
+        credentials = config["run_env"]["credentials"]
+        managers = {
+            "local": lambda: LocalManager(**credentials),
+            "aws": lambda: AWSManager(**credentials)
+        }
+        if backend not in managers:
+            raise Exception('Invalid Backend')
+        manager = managers.get(backend)()
 
         # init busSim
-        busSim = cls(config["data_path"], config["day"], config["start_time"], config["elapse_time"],
-                     config["avg_walking_speed"], config["max_walking_min"])
-        config["x_num"], config["y_num"], _ = busSim._get_grid_dimention(
-            config["grid_size_min"])
-        result = Result(config)
+        # TODO: use something like this busSim = cls(manager=manager, **busSim_params)
+        busSim = cls(manager, busSim_params["day"], busSim_params["start_time"], busSim_params["elapse_time"],
+                     busSim_params["avg_walking_speed"], busSim_params["max_walking_min"])
+
+        busSim_params["x_num"], busSim_params["y_num"], _ = busSim._get_grid_dimention(
+            busSim_params["grid_size_min"])
+        result = Result(busSim_params)
 
         # run busSim search on every start_point
         for start_point in config["start_points"]:
             grid = busSim.get_access_grid(
-                start_point=start_point, grid_size_min=config["grid_size_min"])
+                start_point=start_point, grid_size_min=busSim_params["grid_size_min"])
             result.record(start_point, grid)
 
-        result.save(config["output_path"])
+        manager.save(result)
 
     def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2):
         x_num, y_num, grid_size = self._get_grid_dimention(grid_size_min)
@@ -217,10 +241,10 @@ class BusSim:
     def _gen_final_df(self, route_remove, trip_delays):
         self._logger.debug("Start generating dataframe")
 
-        stops_df = self.fileManager.read_csv("stops-3174.csv")
-        trips_df = self.fileManager.read_csv("trips.csv")
-        stopTimes_df = self.fileManager.read_csv("stop_times.csv")
-        calendar_df = self.fileManager.read_csv("calendar.csv")
+        stops_df = self.manager.read_csv("stops-3174.csv")
+        trips_df = self.manager.read_csv("trips.csv")
+        stopTimes_df = self.manager.read_csv("stop_times.csv")
+        calendar_df = self.manager.read_csv("calendar.csv")
 
         # get valid service_ids
         calendar_df['start_date'] = pd.to_datetime(
@@ -258,17 +282,9 @@ class BusSim:
 
         return stopTimes_final_df
 
-    def _get_fileManager(self, backend, data_path):
-        managers = {
-            "local": lambda: LocalManager(data_path)
-        }
-        if backend not in managers:
-            raise Exception('Invalid Backend')
-        return managers.get(backend)()
-
     def _load_map(self):
-        city = self.fileManager.read_shape("madison-meter-shp")
-        self.lakes = self.fileManager.read_shape("water-meter-shp")
+        city = self.manager.read_shape("madison-meter-shp")
+        self.lakes = self.manager.read_shape("water-meter-shp")
         self.max_x = city.bounds.maxx.max()
         self.min_x = city.bounds.minx.min()
         self.max_y = city.bounds.maxy.max()

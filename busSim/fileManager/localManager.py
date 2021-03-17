@@ -1,12 +1,13 @@
-from .baseManager import BaseManager
+from .manager import Manager
 import os
 import pandas as pd
 import geopandas as gpd
 
 
-class LocalManager(BaseManager):
-    def __init__(self, data_path):
+class LocalManager(Manager):
+    def __init__(self, data_path, output_path):
         self.data_path = data_path
+        self.output_path = output_path
         super().__init__()
 
     def read_csv(self, filename):
@@ -19,3 +20,7 @@ class LocalManager(BaseManager):
             self.data_path, "plot", "background", filename)
         gdf = gpd.read_file(path)
         return gdf
+
+    def save(self, result):
+        with open(self.output_path, "wb") as f:
+            f.write(result.to_bytes())

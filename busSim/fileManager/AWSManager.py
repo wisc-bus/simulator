@@ -1,9 +1,9 @@
-from .baseManager import BaseManager
+from .manager import Manager
 import os
 import pandas as pd
 
 
-class AWSManager(BaseManager):
+class AWSManager(Manager):
     def __init__(self):
         pass
 
@@ -11,4 +11,7 @@ class AWSManager(BaseManager):
         pass
 
     def read_shape(self, filename):
+        pass
+
+    def save(self, result):
         pass
