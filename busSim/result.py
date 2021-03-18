@@ -8,7 +8,8 @@ class Result():
            "thursday", "friday", "saturday", "sunday"]
 
     def __init__(self, config):
-        self.data = b''
+        self.data = b""
+        self.no_removal_data = b""
         self.day = self.DAY.index(config["day"])
         self.start_time = tomin(config["start_time"])
         self.elapse_time = tomin(config["elapse_time"])
@@ -20,9 +21,14 @@ class Result():
         self.y_num = config["y_num"]
         self.data_block_size = (self.x_num * self.y_num + 7) // 8
 
-    def record(self, start_point, grid):
+    def record(self, start_point, grid, route_remove=None):
         data = self._serialize_grid(grid)
+        if route_remove == None:
+            self.no_removal_data += data
         self.data += data
+
+    def record_batch(self, route_remove):
+        self.data += self.no_removal_data
 
     def to_bytes(self):
         header = self._serialize_header()

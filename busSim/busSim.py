@@ -130,6 +130,16 @@ class BusSim:
                 start_point=start_point, grid_size_min=busSim_params["grid_size_min"])
             result.record(start_point, grid)
 
+        unique_routes = busSim.get_available_route()
+        for route in config["route_remove"]:
+            if route in unique_routes:
+                for start_point in config["start_points"]:
+                    grid = busSim.get_access_grid(
+                        start_point=start_point, grid_size_min=busSim_params["grid_size_min"], route_remove=[route])
+                    result.record(start_point, grid, route)
+            else:
+                result.record_batch(route)
+
         manager.save(result)
 
     def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2, route_remove=[]):
@@ -275,6 +285,9 @@ class BusSim:
             stopTimes_merged_df, self.start_time, self.elapse_time).sort_values(by="arrival_time")
 
         return stopTimes_final_df
+
+    def get_available_route(self):
+        return self.stopTimes_final_df["route_short_name"].unique()
 
     def _load_map(self):
         city = self.manager.read_shape("madison-meter-shp")
