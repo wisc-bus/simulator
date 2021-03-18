@@ -18,7 +18,6 @@ class BusSim:
         elapse_time,
         avg_walking_speed=1.4,
         max_walking_min=-1,  # HACK
-        route_remove=[],
         trip_delays=[]
     ):
         """The constructor of the BusSim class
@@ -39,9 +38,6 @@ class BusSim:
 
             max_walking_min (float): the maximum allowed walking time minutes
 
-            route_remove (list[int], optional): the list
-                of routes to remove
-
             trip_delays (list[Tuple], optional): the list
                 of trip-delay pairs to add the tuple should be in the format of
                 `(trip_id, delay in HH:MM:SS)`
@@ -60,7 +56,7 @@ class BusSim:
             max_walking_min = elapse_time
         self.max_walking_min = max_walking_min
         self.max_walking_distance = max_walking_min * 60.0 * avg_walking_speed
-        self.stopTimes_final_df = self._gen_final_df(route_remove, trip_delays)
+        self.stopTimes_final_df = self._gen_final_df(trip_delays)
         self.graph = Graph(self.stopTimes_final_df, start_time,
                            elapse_time, self.max_walking_distance, avg_walking_speed)
 
@@ -136,7 +132,7 @@ class BusSim:
 
         manager.save(result)
 
-    def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2):
+    def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2, route_remove=[]):
         x_num, y_num, grid_size = self._get_grid_dimention(grid_size_min)
         grid = []
         for y in range(y_num):
@@ -149,7 +145,8 @@ class BusSim:
         # first convert start_point into meters
         if start_point is not None:
             start_point = transform(start_point[0], start_point[1])
-        stops_radius_list = self.graph.search(start_stop, start_point)
+        stops_radius_list = self.graph.search(
+            start_stop, start_point, route_remove)
 
         if stops_radius_list is None or len(stops_radius_list) == 0:
             return grid
@@ -183,7 +180,7 @@ class BusSim:
         self._logger.info("Finish generating grid")
         return grid
 
-    def get_gdf(self, start_stop=None, start_point=None):
+    def get_gdf(self, start_stop=None, start_point=None, route_remove=[]):
         """Given a starting point(lat, lon) or a starting stop_id, compute the region covered in geopandas.Geodataframe
 
         Args:
@@ -201,7 +198,8 @@ class BusSim:
         # first convert start_point into meters
         if start_point is not None:
             start_point = transform(start_point[0], start_point[1])
-        stops_radius_list = self.graph.search(start_stop, start_point)
+        stops_radius_list = self.graph.search(
+            start_stop, start_point, route_remove)
 
         if stops_radius_list is None or len(stops_radius_list) == 0:
             return
@@ -238,7 +236,7 @@ class BusSim:
         self._logger.info("finish calculating area")
         return area
 
-    def _gen_final_df(self, route_remove, trip_delays):
+    def _gen_final_df(self, trip_delays):
         self._logger.debug("Start generating dataframe")
 
         stops_df = self.manager.read_csv("stops-3174.csv")
@@ -258,12 +256,8 @@ class BusSim:
         # get valid trips
         trips_df = trips_df[trips_df["service_id"].isin(service_ids)]
 
-        # remove routes
-        trips_filtered_df = trips_df[~trips_df["route_short_name"].isin(
-            route_remove)]
-
         # get valid stop_times
-        stopTimes_filtered_df = trips_filtered_df.merge(
+        stopTimes_filtered_df = trips_df.merge(
             stopTimes_df, on="trip_id")
         stopTimes_merged_df = stopTimes_filtered_df.merge(stops_df, on="stop_id")[
             ["service_id", "route_short_name", "trip_id", "stop_id", "stop_sequence", "arrival_time", "shape_dist_traveled", "stop_x", "stop_y", "cardinal_direction"]]

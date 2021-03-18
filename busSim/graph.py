@@ -8,8 +8,9 @@ import logging
 
 
 class Node:
-    def __init__(self, trip_id, stop_sequence, stop_id, stop_x, stop_y, arrival_time, max_walking_distance):
+    def __init__(self, trip_id, route_short_name, stop_sequence, stop_id, stop_x, stop_y, arrival_time, max_walking_distance):
         self.trip_id = trip_id
+        self.route_short_name = route_short_name
         self.stop_sequence = stop_sequence
         self.stop_id = stop_id
         self.stop_x = stop_x
@@ -41,7 +42,7 @@ class Node:
         return d
 
     def __str__(self):
-        return f"trip_id: {self.trip_id} stop_sequence: {self.stop_sequence} stop_id: {self.stop_id} stop_x: {self.stop_x} stop_y: {self.stop_y} arrival_time: {self.arrival_time} walking_distance: {self.walking_distance}"
+        return f"trip_id: {self.trip_id} route_short_name: {self.route_short_name} stop_sequence: {self.stop_sequence} stop_id: {self.stop_id} stop_x: {self.stop_x} stop_y: {self.stop_y} arrival_time: {self.arrival_time} walking_distance: {self.walking_distance}"
 
     def __repr__(self):
         rv = self.__str__()
@@ -82,7 +83,7 @@ class Graph:
 
     # return the area coverage data after performing graph search
     # return format: [{“stop_id”, “stop_y”, “stop_x”, “radius”}, ... ]
-    def search(self, start_stop=None, start_point=None):
+    def search(self, start_stop=None, start_point=None, route_remove=[]):
         if self.empty:
             return
 
@@ -91,7 +92,7 @@ class Graph:
         self._logger.debug("start clearing graph")
         self._clear_graph()
         self._logger.debug("start runnning dijkstra")
-        self._dijkstra(start)
+        self._dijkstra(start, route_remove)
 
         self._logger.debug("start collecting nodes")
         stops_radius_dict = dict()
@@ -117,7 +118,7 @@ class Graph:
         for node in self.nodes:
             node.walking_distance = self.max_walking_distance
 
-    def _dijkstra(self, start):
+    def _dijkstra(self, start, route_remove):
         pq = [(0, start)]
         while len(pq) > 0:
             curr_distance, curr_node = heapq.heappop(pq)
@@ -126,6 +127,8 @@ class Graph:
                 continue
 
             for child in curr_node.children:
+                if child.node.route_short_name in route_remove:
+                    continue
                 cost = child.cost
                 child = child.node
 
@@ -159,7 +162,7 @@ class Graph:
             map_grid.append(x_list)
 
         for index, row in self.df.iterrows():
-            node = Node(row["trip_id"], row["stop_sequence"], row["stop_id"], row["stop_x"],
+            node = Node(row["trip_id"], row["route_short_name"], row["stop_sequence"], row["stop_id"], row["stop_x"],
                         row["stop_y"], row["arrival_time"], self.max_walking_distance)
             self.nodes.append(node)
             trip_node_dict[row["trip_id"]].append(node)
@@ -226,7 +229,7 @@ class Graph:
 
     def _find_start_point(self, start_point):
         x, y = start_point
-        start = Node(None, None, None, x, y,
+        start = Node(None, None, None, None, x, y,
                      pd.to_timedelta(self.start_time), 0)
 
         # gen edges by walking
