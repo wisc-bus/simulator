@@ -1,0 +1,4 @@
+url,trip_updates,vehicle_positions,service_alerts,authentication_type
+https://svc.metrotransit.org/mtgtfs/tripupdates.pb,1,0,0,0
+https://svc.metrotransit.org/mtgtfs/vehiclepositions.pb,0,1,0,0
+https://svc.metrotransit.org/mtgtfs/alerts.pb,0,0,1,0

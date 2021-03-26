@@ -1,0 +1,2 @@
+feed_publisher_name,feed_publisher_url,feed_lang,default_lang,feed_start_date,feed_end_date,feed_version,feed_contact_email
+Metro Transit / Metropolitan Council,https://www.metrotransit.org,en,en,20210320,20210507,1616001334,art.brakob@metc.state.mn.us

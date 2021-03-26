@@ -1,0 +1,10 @@
+agency_id,agency_name,agency_url,agency_timezone,agency_lang,agency_phone,agency_fare_url,agency_email
+0,Metro Transit,https://www.metrotransit.org,America/Chicago,en,612-373-3333,https://www.metrotransit.org/fares,
+1,Metro Transit/Met Council,https://www.metrotransit.org,America/Chicago,en,612-373-3333,https://www.metrotransit.org/fares,
+2,Met Council,https://www.metrotransit.org,America/Chicago,en,612-373-3333,https://www.metrotransit.org/fares,
+4,Maple Grove,https://www.maplegrovemn.gov/services/transit,America/Chicago,en,763-494-6005,https://www.metrotransit.org/fares,transit@maplegrovemn.gov
+5,Plymouth,https://www.plymouthmn.gov/departments/administrative-services-/transit,America/Chicago,en,763-509-5535,https://www.plymouthmn.gov/departments/administrative-services-/transit/fare-information,transit@plymouthmn.gov
+6,SouthWest Transit,https://www.swtransit.org/,America/Chicago,en,952-949-2287,https://www.swtransit.org/how-to-ride/fares/,
+10,Airport (MAC),https://www.mspairport.com,America/Chicago,en,612-726-5555,https://www.metrotransit.org/fares,
+11,University of Minnesota,https://www.pts.umn.edu/bus,America/Chicago,en,612-626-7275,https://www.pts.umn.edu/bus/campus-zone-passu-community,busspass@umn.edu
+15,Other,http://www.catchthelink.com/,America/Chicago,en,877-546-5010,http://www.catchthelink.com/fares/,info@catchthelink.com
