@@ -1,26 +1,54 @@
 from .baseManager import BaseManager
+from ..busSim import BusSim
+from ...result.searchResult import SearchResult
 import os
 import pandas as pd
 import geopandas as gpd
+from zipfile import ZipFile
 
 
 class LocalManager(BaseManager):
-    def __init__(self, data_path, output_path):
-        self.data_path = data_path
-        self.output_path = output_path
-        super().__init__()
+    def __init__(self, gtfs_path, city_path, out_path):
+        self.gtfs_path = gtfs_path
+        self.city_path = city_path
+        self.out_path = out_path
 
-    def read_csv(self, filename):
-        path = os.path.join(self.data_path, "mmt_gtfs", filename)
-        df = pd.read_csv(path, sep=",")
-        return df
+    def run_batch(self, busSim_params, start_time, start_points, route_remove):
+        # init busSim
+        busSim = BusSim(self, busSim_params["day"], start_time, busSim_params["elapse_time"],
+                        busSim_params["avg_walking_speed"], busSim_params["max_walking_min"])
+        result = SearchResult(busSim, busSim_params["grid_size_min"])
 
-    def read_shape(self, filename):
-        path = os.path.join(
-            self.data_path, "plot", "background", filename)
-        gdf = gpd.read_file(path)
+        # run busSim search on every start_point
+        for start_point in start_points:
+            grid = busSim.get_access_grid(
+                start_point=start_point, grid_size_min=busSim_params["grid_size_min"])
+            result.record(start_point, grid)
+
+        # run busSim search again with different route removed
+        unique_routes = busSim.get_available_route()
+        for route in route_remove:
+            if route in unique_routes:
+                for start_point in start_points:
+                    grid = busSim.get_access_grid(
+                        start_point=start_point, grid_size_min=busSim_params["grid_size_min"], route_remove=[route])
+                    result.record(start_point, grid, route)
+            else:
+                result.record_batch(route)
+
+        return result
+
+    def read_gtfs(self, filename):
+        with ZipFile(self.gtfs_path) as zf:
+            with zf.open(filename) as f:
+                df = pd.read_csv(f, sep=",")
+                return df
+
+    def read_city(self):
+        gdf = gpd.read_file(self.city_path)
         return gdf
 
     def save(self, result):
-        with open(self.output_path, "wb") as f:
+        out_path = os.path.join(self.out_path, result.get_out_filename())
+        with open(out_path, "wb") as f:
             f.write(result.to_bytes())

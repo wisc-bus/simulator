@@ -1,10 +1,10 @@
-from .busSim import BusSim
 from .busSim.manager import managerFactory
 import pandas as pd
 from pyproj import Transformer
-from zipfile import ZipFile, ZIP_DEFLATED
+from zipfile import ZipFile
 from io import TextIOWrapper
 import os
+from .util import gen_start_time
 
 
 class Gtfo:
@@ -27,12 +27,14 @@ class Gtfo:
                 "max_walking_min": 10,
                 "grid_size_min": 2
             }, 
+            "interval": "00:10:00",
             "start_points": [(43.073691, -89.387407)],
             "route_remove": [1, 10]
         }
         """
         print("Checking config obj")
-        required_fields = ["run_env", "busSim_params",  "start_points"]
+        required_fields = ["run_env", "busSim_params",
+                           "interval", "start_points", "route_remove"]
         if not all(field in config for field in required_fields):
             raise Exception("Invalid config dict")
 
@@ -48,32 +50,12 @@ class Gtfo:
         manager = managerFactory.create(
             config["run_env"], gtfs_path=self.gtfs_path, city_path=self.city_path, out_path=self.out_path)
 
-        # init busSim
-        # TODO: use something like this busSim = cls(manager=manager, **busSim_params)
-        busSim = cls(manager, busSim_params.get("day"), busSim_params.get("start_time"), busSim_params.get("elapse_time"),
-                     busSim_params.get("avg_walking_speed"), busSim_params.get("max_walking_min"))
-
-        busSim_params["x_num"], busSim_params["y_num"], _ = busSim._get_grid_dimention(
-            busSim_params["grid_size_min"])
-        result = Result(busSim_params)
-
-        # run busSim search on every start_point
-        for start_point in config["start_points"]:
-            grid = busSim.get_access_grid(
-                start_point=start_point, grid_size_min=busSim_params["grid_size_min"])
-            result.record(start_point, grid)
-
-        unique_routes = busSim.get_available_route()
-        for route in config["route_remove"]:
-            if route in unique_routes:
-                for start_point in config["start_points"]:
-                    grid = busSim.get_access_grid(
-                        start_point=start_point, grid_size_min=busSim_params["grid_size_min"], route_remove=[route])
-                    result.record(start_point, grid, route)
-            else:
-                result.record_batch(route)
-
-        manager.save(result)
+        start_times = gen_start_time(
+            config["interval"], config["busSim_params"]["elapse_time"])
+        for start_time in start_times:
+            result = manager.run_batch(busSim_params, start_time,
+                                       config["start_points"], config["route_remove"])
+            manager.save(result)
 
     def services(self):
         pass

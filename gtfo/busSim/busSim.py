@@ -1,8 +1,7 @@
 import pandas as pd
 import geopandas as gpd
 from .graph import Graph
-from .util import dprint, transform, gen_start_time
-from .result import Result
+from ..util import transform
 import logging
 from math import ceil, floor, sqrt
 
@@ -145,34 +144,34 @@ class BusSim:
         self._logger.info("Finish generating gdf")
         return gdf
 
-    def get_area(self, gdf):
-        """This is a util method to compute the total area in meters^2 given a geopandas.Geodataframe
+    # def get_area(self, gdf):
+    #     """This is a util method to compute the total area in meters^2 given a geopandas.Geodataframe
 
-        Args:
-            gdf (geopandas.GeoDataFrame): The Geodataframe used to compute the total area
+    #     Args:
+    #         gdf (geopandas.GeoDataFrame): The Geodataframe used to compute the total area
 
-        Returns:
-            float: the total area in meters^2
+    #     Returns:
+    #         float: the total area in meters^2
 
-        """
-        if gdf is None:
-            return
+    #     """
+    #     if gdf is None:
+    #         return
 
-        # the area returned is in meters^2
-        self._logger.info("start calculating area")
+    #     # the area returned is in meters^2
+    #     self._logger.info("start calculating area")
 
-        self._logger.debug("start calculating union/difference")
-        area = gdf.unary_union.difference(self.lakes.unary_union).area
-        self._logger.info("finish calculating area")
-        return area
+    #     self._logger.debug("start calculating union/difference")
+    #     area = gdf.unary_union.difference(self.lakes.unary_union).area
+    #     self._logger.info("finish calculating area")
+    #     return area
 
     def _gen_final_df(self, trip_delays):
         self._logger.debug("Start generating dataframe")
 
-        stops_df = self.manager.read_csv("stops-3174.csv")
-        trips_df = self.manager.read_csv("trips.csv")
-        stopTimes_df = self.manager.read_csv("stop_times.csv")
-        calendar_df = self.manager.read_csv("calendar.csv")
+        stops_df = self.manager.read_gtfs("stops-3174.txt")
+        trips_df = self.manager.read_gtfs("trips.txt")
+        stopTimes_df = self.manager.read_gtfs("stop_times.txt")
+        calendar_df = self.manager.read_gtfs("calendar.txt")
 
         # get valid service_ids
         calendar_df['start_date'] = pd.to_datetime(
@@ -210,8 +209,8 @@ class BusSim:
         return self.stopTimes_final_df["route_short_name"].unique()
 
     def _load_map(self):
-        city = self.manager.read_shape("madison-meter-shp")
-        self.lakes = self.manager.read_shape("water-meter-shp")
+        city = self.manager.read_city()
+        # self.lakes = self.manager.read_shape("water-meter-shp")
         self.max_x = city.bounds.maxx.max()
         self.min_x = city.bounds.minx.min()
         self.max_y = city.bounds.maxy.max()
@@ -219,7 +218,7 @@ class BusSim:
 
     def _is_service_valid(self, day, service_id):
         # FIXME: hardcode in the service to be 94
-        return (day == 1) & (service_id.str.startswith("94"))
+        return (day == 1) & (service_id.str.startswith("95"))
 
     def _get_valid_stopTime(self, df, start_time, elapse_time):
         start_time = pd.to_timedelta(start_time)

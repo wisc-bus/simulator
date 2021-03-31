@@ -27,6 +27,8 @@ def tomin(time_string):
 def gen_start_time(interval, elapse_time):
     start_times = []
     curr = 0
+    interval = tomin(interval)
+    elapse_time = tomin(elapse_time)
     min_total = 24 * 60 - elapse_time
     while curr <= min_total:
         start_times.append(fmin(curr))

@@ -1,25 +1,27 @@
 import os
-from .util import tomin
+from ..util import tomin
 
 
-class Result():
+class SearchResult():
     BITMASK = [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80]
     DAY = ["monday", "tuesday", "wednesday",
            "thursday", "friday", "saturday", "sunday"]
 
-    def __init__(self, config):
+    def __init__(self, busSim, grid_size_min):
         self.data = b""
         self.no_removal_data = b""
-        self.day = self.DAY.index(config["day"])
-        self.start_time = tomin(config["start_time"])
-        self.elapse_time = tomin(config["elapse_time"])
+        self.day = self.DAY.index(busSim.day)
+        self.start_time = tomin(busSim.start_time)
+        self.elapse_time = tomin(busSim.elapse_time)
         # self.start_points = config["start_points"]
-        self.avg_walking_speed = config["avg_walking_speed"]
-        self.max_walking_min = config["max_walking_min"]
-        self.grid_size_min = config["grid_size_min"]
-        self.x_num = config["x_num"]
-        self.y_num = config["y_num"]
+        self.avg_walking_speed = busSim.avg_walking_speed
+        self.max_walking_min = busSim.max_walking_min
+        self.grid_size_min = grid_size_min
+        self.x_num, self.y_num, _ = busSim._get_grid_dimention(grid_size_min)
         self.data_block_size = (self.x_num * self.y_num + 7) // 8
+
+    def get_out_filename(self):
+        return f"search-result-{self.day}-{self.start_time}"
 
     def record(self, start_point, grid, route_remove=None):
         data = self._serialize_grid(grid)

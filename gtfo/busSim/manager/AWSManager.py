@@ -11,10 +11,10 @@ class AWSManager(BaseManager):
         self._upload_data(gtfs_path, city_path)
         self._upload_lambda()
 
-    def read_csv(self, filename):
+    def read_gtfs(self, filename):
         pass
 
-    def read_shape(self, filename):
+    def read_city(self):
         pass
 
     def save(self, result):

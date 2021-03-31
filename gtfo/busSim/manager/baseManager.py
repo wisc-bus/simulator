@@ -1,9 +1,9 @@
 class BaseManager():
 
-    def read_csv(self, filename):
+    def read_gtfs(self, filename):
         pass
 
-    def read_shape(self, filename):
+    def read_city(self):
         pass
 
     def save(self, result):
