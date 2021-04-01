@@ -1,8 +1,10 @@
 from .baseManager import BaseManager
 import os
 import json
+import time
 from zipfile import ZipFile
 import pandas as pd
+from subprocess import check_output
 import boto3
 
 
@@ -10,7 +12,7 @@ class AWSManager(BaseManager):
     def __init__(self, gtfs_path, city_path, out_path):
         self._s3 = boto3.client('s3')
         self._iam = boto3.client("iam")
-        self._lambda = boto3.client('lambda', region_name='us-west-2')
+        self._lambda = boto3.client('lambda', region_name='ap-northeast-1')
         self.bucket_name = self._create_bucket()
         # self._upload_data(gtfs_path, city_path)
         self._upload_lambda()
@@ -48,12 +50,30 @@ class AWSManager(BaseManager):
                                 Body=f)
 
     def _upload_lambda(self):
-        print("deploying lambda")
-        self._upload_lambda_layer()
+        # self._upload_lambda_layer()
         self._upload_lambda_function()
 
     def _upload_lambda_layer(self):
-        pass
+        print("packaging lambda layer")
+        self.layerName = "busSim-layer"
+
+        lambda_path = self._get_lambda_path()
+        check_output(["./deploy_layer.sh"], cwd=lambda_path)
+        zip_path = os.path.join(
+            lambda_path, "lambda_layers", "busSim-layer.zip")
+
+        print("deploying lambda layer")
+        with open(zip_path, 'rb') as f:
+            self._lambda.publish_layer_version(
+                LayerName=self.layerName,
+                Description='The layer needed for busSim',
+                Content={
+                    'ZipFile': f.read()
+                },
+                CompatibleRuntimes=[
+                    'python3.8',
+                ]
+            )
 
     def _upload_lambda_function(self):
         self.roleName = 's3rwRole'
@@ -61,6 +81,7 @@ class AWSManager(BaseManager):
         self.functionName = 'busSim'
 
         # create IAM role
+        print("creating IAM role")
         response = self._iam.create_role(
             RoleName=self.roleName,
             AssumeRolePolicyDocument=json.dumps({
@@ -109,15 +130,16 @@ class AWSManager(BaseManager):
         )
 
         # package function
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        lambda_path = os.path.join(
-            dir_path, os.pardir, os.pardir, os.pardir, "lambda")
+        print("packaging lambda function")
+        lambda_path = self._get_lambda_path()
 
         tmp = 'tmp.zip'
         with ZipFile(tmp, 'w') as z:
-            for name in (n for n in os.listdir(lambda_path) if n.split('.')[-1] in ('py', 'txt')):
+            for name in (n for n in os.listdir(lambda_path) if n.split('.')[-1] == 'py'):
                 z.write(os.path.join(lambda_path, name), '/'+name)
 
+        print("deploying lambda function")
+        time.sleep(10)
         with open(tmp, 'rb') as f:
             response = self._lambda.create_function(
                 Code={
@@ -162,6 +184,12 @@ class AWSManager(BaseManager):
         self._lambda.delete_function(
             FunctionName=self.functionName
         )
+
+    def _get_lambda_path(self):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        lambda_path = os.path.join(
+            dir_path, os.pardir, os.pardir, os.pardir, "lambda")
+        return lambda_path
 
     def _get_account_id(self):
         sts = boto3.client('sts')

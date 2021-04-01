@@ -133,3 +133,6 @@ config.py
 
 .DS_Store
 .vscode
+
+# lambda layer package
+lambda/lambda_layers
