@@ -27,33 +27,22 @@ class Gtfo:
                 "grid_size_min": 2
             }, 
             "interval": "00:10:00",
-            "start_points": [(43.073691, -89.387407)],
-            "route_remove": [1, 10]
+            "start_points": [(43.073691, -89.387407)]
         }
         """
-        print("Checking config obj")
-        required_fields = ["run_env", "busSim_params",
-                           "interval", "start_points", "route_remove"]
-        if not all(field in config for field in required_fields):
-            raise Exception("Invalid config dict")
-
-        busSim_params = config["busSim_params"]
-        if "avg_walking_speed" not in busSim_params:
-            busSim_params["avg_walking_speed"] = 1.4
-        if "max_walking_min" not in busSim_params:
-            busSim_params["max_walking_min"] = busSim_params["elapse_time"]
-        if "grid_size_min" not in busSim_params:
-            busSim_params["grid_size_min"] = 2
+        # prerun check
+        if not config.is_runnable():
+            raise Exception("The current config is not runnable")
 
         # dynamically init a manager
         manager = managerFactory.create(
-            config["run_env"], gtfs_path=self.gtfs_path, out_path=self.out_path, borders=self.borders)
+            config.get_run_env(), gtfs_path=self.gtfs_path, out_path=self.out_path, borders=self.borders)
 
         start_times = gen_start_time(
-            config["interval"], config["busSim_params"]["elapse_time"])
+            config.get_interval(), config.get_busSim_params().get("elapse_time"))
         for start_time in start_times:
-            result = manager.run_batch(busSim_params, start_time,
-                                       config["start_points"], config["route_remove"])
+            result = manager.run_batch(config.get_busSim_params(), start_time,
+                                       config.get_start_points())
             manager.save(result)
 
     def services(self):

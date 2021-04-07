@@ -58,6 +58,7 @@ class BusSim:
         self._logger.info("Sim successfully initialized")
 
     def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2, route_remove=[]):
+        max_x, min_x, max_y, min_y = self.manager.get_borders()
         x_num, y_num, grid_size = self._get_grid_dimention(grid_size_min)
         grid = []
         for y in range(y_num):
@@ -80,13 +81,13 @@ class BusSim:
 
         for bubble in stops_radius_list:
             min_x_idx = floor(
-                (bubble["stop_x"] - self.min_x - bubble["radius"]) / grid_size)
+                (bubble["stop_x"] - min_x - bubble["radius"]) / grid_size)
             max_x_idx = floor(
-                (bubble["stop_x"] - self.min_x + bubble["radius"]) / grid_size)
+                (bubble["stop_x"] - min_x + bubble["radius"]) / grid_size)
             min_y_idx = floor(
-                (bubble["stop_y"] - self.min_y - bubble["radius"]) / grid_size)
+                (bubble["stop_y"] - min_y - bubble["radius"]) / grid_size)
             max_y_idx = floor(
-                (bubble["stop_y"] - self.min_y + bubble["radius"]) / grid_size)
+                (bubble["stop_y"] - min_y + bubble["radius"]) / grid_size)
 
             # TODO: make this radius calculation more precise
             radius_idx = (max_x_idx - min_x_idx + 1) / 2
