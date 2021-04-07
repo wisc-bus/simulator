@@ -8,9 +8,8 @@ from .util import gen_start_time
 
 
 class Gtfo:
-    def __init__(self, gtfs_path, city_path, out_path):
+    def __init__(self, gtfs_path, out_path):
         self.gtfs_path = gtfs_path
-        self.city_path = city_path
         self.out_path = out_path
         self._preprocess_gtfs()
 
@@ -48,7 +47,7 @@ class Gtfo:
 
         # dynamically init a manager
         manager = managerFactory.create(
-            config["run_env"], gtfs_path=self.gtfs_path, city_path=self.city_path, out_path=self.out_path)
+            config["run_env"], gtfs_path=self.gtfs_path, out_path=self.out_path, borders=self.borders)
 
         start_times = gen_start_time(
             config["interval"], config["busSim_params"]["elapse_time"])
@@ -64,7 +63,10 @@ class Gtfo:
         pass
 
     def _preprocess_gtfs(self):
-        # reproject each stops into x, y
+        self._reproject_stops()
+        self.borders = self._get_borders()
+
+    def _reproject_stops(self):
         with ZipFile(self.gtfs_path) as zf:
             if "stops-3174.txt" in zf.namelist():
                 return
@@ -75,8 +77,23 @@ class Gtfo:
                     stops_df["stop_lat"], stops_df["stop_lon"])
                 stops_df["stop_x"] = stop_x
                 stops_df["stop_y"] = stop_y
+                # TODO change this to a fake file wrapper
                 stops_df.to_csv("stops-3174.txt")
 
         with ZipFile(self.gtfs_path, "a") as zf:
             zf.write('stops-3174.txt')
         os.remove('stops-3174.txt')
+
+    def _get_borders(self):
+        # TODO optimize
+        # 1. combine with previous _reproject_stops to only open the file once
+        # 2. these can be computed within one loop
+        with ZipFile(self.gtfs_path) as zf:
+            with zf.open("stops-3174.txt") as f:
+                stops_df = pd.read_csv(TextIOWrapper(f), sep=",")
+                max_x = stops_df["stop_x"].max()
+                min_x = stops_df["stop_x"].min()
+                max_y = stops_df["stop_y"].max()
+                min_y = stops_df["stop_y"].min()
+
+                return (max_x, min_x, max_y, min_y)

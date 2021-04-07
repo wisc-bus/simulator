@@ -21,8 +21,6 @@ class BusSim:
         """The constructor of the BusSim class
 
         Args:
-            data_path (str): The path to the directory of the data files
-                (contains both mmt_gtfs and plot subdirectories)
 
             day (str): the day in a week to perform simulation on
 
@@ -57,8 +55,6 @@ class BusSim:
         self.stopTimes_final_df = self._gen_final_df(trip_delays)
         self.graph = Graph(self.stopTimes_final_df, start_time,
                            elapse_time, self.max_walking_distance, avg_walking_speed)
-
-        self._load_map()
         self._logger.info("Sim successfully initialized")
 
     def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2, route_remove=[]):
@@ -208,14 +204,6 @@ class BusSim:
     def get_available_route(self):
         return self.stopTimes_final_df["route_short_name"].unique()
 
-    def _load_map(self):
-        city = self.manager.read_city()
-        # self.lakes = self.manager.read_shape("water-meter-shp")
-        self.max_x = city.bounds.maxx.max()
-        self.min_x = city.bounds.minx.min()
-        self.max_y = city.bounds.maxy.max()
-        self.min_y = city.bounds.miny.min()
-
     def _is_service_valid(self, day, service_id):
         # FIXME: hardcode in the service to be 94
         return (day == 1) & (service_id.str.startswith("95"))
@@ -226,7 +214,8 @@ class BusSim:
         return df[(df['arrival_time'] > start_time) & (df['arrival_time'] < end_time)]
 
     def _get_grid_dimention(self, grid_size_min):
+        max_x, min_x, max_y, min_y = self.manager.get_borders()
         grid_size = grid_size_min * self.avg_walking_speed * 60
-        x_num = ceil(abs(self.max_x - self.min_x) / grid_size)
-        y_num = ceil(abs(self.max_y - self.min_y) / grid_size)
+        x_num = ceil(abs(max_x - min_x) / grid_size)
+        y_num = ceil(abs(max_y - min_y) / grid_size)
         return x_num, y_num, grid_size

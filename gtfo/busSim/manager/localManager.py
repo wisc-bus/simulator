@@ -8,10 +8,9 @@ from zipfile import ZipFile
 
 
 class LocalManager(BaseManager):
-    def __init__(self, gtfs_path, city_path, out_path):
-        self.gtfs_path = gtfs_path
-        self.city_path = city_path
+    def __init__(self, gtfs_path, out_path, borders):
         self.out_path = out_path
+        super().__init__(gtfs_path, borders)
 
     def run_batch(self, busSim_params, start_time, start_points, route_remove):
         # init busSim
@@ -43,10 +42,6 @@ class LocalManager(BaseManager):
             with zf.open(filename) as f:
                 df = pd.read_csv(f, sep=",")
                 return df
-
-    def read_city(self):
-        gdf = gpd.read_file(self.city_path)
-        return gdf
 
     def save(self, result):
         out_path = os.path.join(self.out_path, result.get_out_filename())
