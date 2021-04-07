@@ -1,4 +1,5 @@
 from .busSim import BusSim
+from .config import Config
 
 import logging
 import sys
