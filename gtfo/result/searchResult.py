@@ -9,7 +9,6 @@ class SearchResult():
 
     def __init__(self, busSim, grid_size_min):
         self.data = b""
-        self.no_removal_data = b""
         self.day = self.DAY.index(busSim.day)
         self.start_time = tomin(busSim.start_time)
         self.elapse_time = tomin(busSim.elapse_time)
@@ -23,14 +22,9 @@ class SearchResult():
     def get_out_filename(self):
         return f"search-result-{self.day}-{self.start_time}"
 
-    def record(self, start_point, grid, route_remove=None):
+    def record(self, start_point, grid):
         data = self._serialize_grid(grid)
-        if route_remove == None:
-            self.no_removal_data += data
         self.data += data
-
-    def record_batch(self, route_remove):
-        self.data += self.no_removal_data
 
     def to_bytes(self):
         header = self._serialize_header()

@@ -14,22 +14,6 @@ class Gtfo:
         self._preprocess_gtfs()
 
     def search(self, config):
-        """Execute sim with route_ko from a config dict
-
-        Here is an example of such config dict
-        {
-            "run_env": "local",
-            "busSim_params": {
-                "day": "monday",
-                "elapse_time": "00:30:00",
-                "avg_walking_speed": 1.4,
-                "max_walking_min": 10,
-                "grid_size_min": 2
-            }, 
-            "interval": "00:10:00",
-            "start_points": [(43.073691, -89.387407)]
-        }
-        """
         # prerun check
         if not config.is_runnable():
             raise Exception("The current config is not runnable")
@@ -40,15 +24,17 @@ class Gtfo:
 
         start_times = gen_start_time(
             config.get_interval(), config.get_busSim_params().get("elapse_time"))
-        for start_time in start_times:
-            result = manager.run_batch(config.get_busSim_params(), start_time,
-                                       config.get_start_points())
-            manager.save(result)
+        result_df = manager.run_batch(config.get_busSim_params(), start_times,
+                                      config.get_start_points())
+        return result_df
 
     def services(self):
         pass
 
     def census(self):
+        pass
+
+    def load_result_map(self, map_identifier):
         pass
 
     def _preprocess_gtfs(self):
