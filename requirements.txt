@@ -5,3 +5,4 @@ pandas
 geopandas
 descartes
 geopy
+boto3

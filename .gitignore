@@ -126,10 +126,16 @@ venv.bak/
 dmypy.json
 
 # config file
-config.py
+# config.py
 
 # Pyre type checker
 .pyre/
 
 .DS_Store
 .vscode
+
+# lambda layer package
+lambda/lambda_layers
+
+# out path
+/out 
