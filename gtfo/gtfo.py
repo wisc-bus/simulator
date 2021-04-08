@@ -1,5 +1,8 @@
 from .busSim.manager import managerFactory
+from .result.searchResult import SearchResult
 import pandas as pd
+import geopandas as gpd
+from shapely.geometry import Polygon
 from pyproj import Transformer
 from zipfile import ZipFile
 from io import TextIOWrapper
@@ -36,7 +39,31 @@ class Gtfo:
         pass
 
     def load_result_map(self, map_identifier):
-        pass
+        tokens = map_identifier.split("!")
+        if len(tokens) != 2 or not tokens[1].isnumeric():
+            raise Exception("invalid map_identifier")
+        filename, idx = tokens[0], int(tokens[1])
+
+        grid, grid_size = SearchResult.load_grid(filename, idx)
+
+        # generate gdf
+        max_x, min_x, max_y, min_y = self.borders
+        df = pd.DataFrame(
+            columns=["geometry"])
+        grid_size = 2 * 1.4 * 60
+        i = 0
+        for y, row in enumerate(grid):
+            for x, bit in enumerate(row):
+                x0 = grid_size * x + min_x
+                x1 = x0 + grid_size
+                y0 = grid_size * y + min_y
+                y1 = y0 + grid_size
+                if bit == 1:
+                    df.loc[i, "geometry"] = Polygon(
+                        [(x0, y0), (x0, y1), (x1, y1), (x1, y0)])
+                    i += 1
+        gdf = gpd.GeoDataFrame(df, crs="EPSG:3174")
+        return gdf
 
     def _get_out_path(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))

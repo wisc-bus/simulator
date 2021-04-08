@@ -18,6 +18,36 @@ class SearchResult():
         self.x_num, self.y_num, _ = busSim._get_grid_dimention(grid_size_min)
         self.data_block_size = (self.x_num * self.y_num + 7) // 8
 
+    @classmethod
+    def load_grid(cls, filename, idx):
+        with open(filename, "rb") as f:
+            # day = f.read(1)
+            # start_time = f.read(2)
+            # elapse_time = f.read(1)
+            # max_walking_min = f.read(1)
+            f.read(5)  # skip previous header for now
+            grid_size_min = int.from_bytes(f.read(1), "big")
+            x_num = int.from_bytes(f.read(2), "big")
+            y_num = int.from_bytes(f.read(2), "big")
+            data_block_size = (x_num * y_num + 7) // 8
+            f.seek(data_block_size*idx, 1)
+            grid = []
+            row = []
+            data = f.read(data_block_size)
+
+            for i in range(x_num * y_num):
+                x = i % x_num
+                if x == 0 and i != 0:
+                    grid.append(row)
+                    row = []
+
+                row.append(data[i // 8] >> (i % 8) & 0x01)
+
+            grid.append(row)
+
+        # TODO: fix this hardcoded 1.4 avg walking speed
+        return grid, grid_size_min*1.4*60
+
     def get_out_filename(self):
         return f"search-result-{self.day}-{self.start_time}"
 
