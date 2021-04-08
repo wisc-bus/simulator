@@ -4,13 +4,14 @@ from pyproj import Transformer
 from zipfile import ZipFile
 from io import TextIOWrapper
 import os
+from pathlib import Path
 from .util import gen_start_time
 
 
 class Gtfo:
-    def __init__(self, gtfs_path, out_path):
+    def __init__(self, gtfs_path):
         self.gtfs_path = gtfs_path
-        self.out_path = out_path
+        self.out_path = self._get_out_path()
         self._preprocess_gtfs()
 
     def search(self, config):
@@ -36,6 +37,12 @@ class Gtfo:
 
     def load_result_map(self, map_identifier):
         pass
+
+    def _get_out_path(self):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        out_path = os.path.join(dir_path, os.pardir, "out")
+        Path(out_path).mkdir(parents=True, exist_ok=True)
+        return out_path
 
     def _preprocess_gtfs(self):
         self._reproject_stops()

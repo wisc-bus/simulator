@@ -12,8 +12,7 @@ class SearchResult():
         self.day = self.DAY.index(busSim.day)
         self.start_time = tomin(busSim.start_time)
         self.elapse_time = tomin(busSim.elapse_time)
-        # self.start_points = config["start_points"]
-        self.avg_walking_speed = busSim.avg_walking_speed
+        # self.avg_walking_speed = busSim.avg_walking_speed
         self.max_walking_min = busSim.max_walking_min
         self.grid_size_min = grid_size_min
         self.x_num, self.y_num, _ = busSim._get_grid_dimention(grid_size_min)

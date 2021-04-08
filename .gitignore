@@ -136,3 +136,6 @@ dmypy.json
 
 # lambda layer package
 lambda/lambda_layers
+
+# out path
+/out 
