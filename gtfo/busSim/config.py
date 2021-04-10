@@ -1,4 +1,5 @@
 from .manager import managerFactory
+from ..util import tomin
 from shapely.geometry import Point
 
 
@@ -10,7 +11,7 @@ class Config:
                 "day": day,
                 "elapse_time": elapse_time,
                 "avg_walking_speed": avg_walking_speed,
-                "max_walking_min": max_walking_min if max_walking_min != None else elapse_time,
+                "max_walking_min": max_walking_min if max_walking_min != None else tomin(elapse_time),
                 "grid_size_min": grid_size_min
             },
             "interval": interval,
