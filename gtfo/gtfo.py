@@ -1,7 +1,8 @@
 from .busSim.manager import managerFactory
 from .result.searchResult import SearchResult
-from .util import gen_start_time
+from .util import gen_start_time, transform
 from .service.yelp import get_results
+import numpy as np
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon
@@ -10,6 +11,7 @@ from zipfile import ZipFile
 from io import TextIOWrapper
 import os
 from pathlib import Path
+from math import ceil, floor
 
 
 class Gtfo:
@@ -39,22 +41,40 @@ class Gtfo:
                for service in services]
         return pd.concat(dfs)
 
-    def census(self):
-        pass
+    def add_service_metrics(self, result_gdf, services_gdf):
+        # load grid size from a map_identifier (pick the first one on result_gdf)
+        map_identifier = result_gdf.at[0, "map_identifier"]
+        filename, idx = self._parse_map_identifier(map_identifier)
+        _, grid_size = SearchResult.load_grid(filename, idx)
+        max_x, min_x, max_y, min_y = self.borders
+        x_num = ceil(abs(max_x - min_x) / grid_size)
+        y_num = ceil(abs(max_y - min_y) / grid_size)
+
+        def get_grid(df):
+            grid = np.zeros(x_num*y_num).reshape(y_num, -1)
+            for index, row in df.iterrows():
+                # convert to 3174 first
+                x, y = transform(row["latitude"], row["longitude"])
+                x_idx = floor((x - min_x) / grid_size)
+                y_idx = floor((y - min_y) / grid_size)
+                if x_idx >= 0 and x_idx < x_num and y_idx >= 0 and y_idx < y_num:
+                    grid[y_idx][x_idx] += 1
+
+            return [grid]
+
+        services_grid_df = services_gdf.groupby("service").apply(get_grid)
+        return services_grid_df
+        # for service, grid in grids.items():
+        #     pass  # TODO: combine bitmaps here
 
     def load_result_map(self, map_identifier):
-        tokens = map_identifier.split("!")
-        if len(tokens) != 2 or not tokens[1].isnumeric():
-            raise Exception("invalid map_identifier")
-        filename, idx = tokens[0], int(tokens[1])
-
+        filename, idx = self._parse_map_identifier(map_identifier)
         grid, grid_size = SearchResult.load_grid(filename, idx)
+        max_x, min_x, max_y, min_y = self.borders
 
         # generate gdf
-        max_x, min_x, max_y, min_y = self.borders
         df = pd.DataFrame(
             columns=["geometry"])
-        grid_size = 2 * 1.4 * 60
         i = 0
         for y, row in enumerate(grid):
             for x, bit in enumerate(row):
@@ -98,7 +118,7 @@ class Gtfo:
         os.remove('stops-3174.txt')
 
     def _get_borders(self):
-        # TODO optimize
+        # TODO: optimize
         # 1. combine with previous _reproject_stops to only open the file once
         # 2. these can be computed within one loop
         with ZipFile(self.gtfs_path) as zf:
@@ -110,3 +130,9 @@ class Gtfo:
                 min_y = stops_df["stop_y"].min()
 
                 return (max_x, min_x, max_y, min_y)
+
+    def _parse_map_identifier(self, map_identifier):
+        tokens = map_identifier.split("!")
+        if len(tokens) != 2 or not tokens[1].isnumeric():
+            raise Exception("invalid map_identifier")
+        return os.path.join(self.out_path, tokens[0]), int(tokens[1])

@@ -1,5 +1,6 @@
 import pandas as pd
 import geopandas as gpd
+import numpy as np
 from .graph import Graph
 from ..util import transform
 import logging
@@ -60,12 +61,7 @@ class BusSim:
     def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2, route_remove=[]):
         max_x, min_x, max_y, min_y = self.manager.get_borders()
         x_num, y_num, grid_size = self._get_grid_dimention(grid_size_min)
-        grid = []
-        for y in range(y_num):
-            row = []
-            for x in range(x_num):
-                row.append(0)
-            grid.append(row)
+        grid = np.zeros(x_num*y_num).reshape(y_num, -1)
 
         self._logger.info("Start searching graph")
         # first convert start_point into meters
@@ -78,7 +74,6 @@ class BusSim:
             return grid
 
         self._logger.info("Start compressing")
-
         for bubble in stops_radius_list:
             min_x_idx = floor(
                 (bubble["stop_x"] - min_x - bubble["radius"]) / grid_size)
