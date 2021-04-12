@@ -1,5 +1,7 @@
 from .busSim.manager import managerFactory
 from .result.searchResult import SearchResult
+from .util import gen_start_time
+from .service.yelp import get_results
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon
@@ -8,7 +10,6 @@ from zipfile import ZipFile
 from io import TextIOWrapper
 import os
 from pathlib import Path
-from .util import gen_start_time
 
 
 class Gtfo:
@@ -32,8 +33,11 @@ class Gtfo:
                                       config.get_start_points())
         return result_df
 
-    def services(self):
-        pass
+    def load_yelp(self, api_key, services=["banks", "clinics", "dentists", "hospitals", "restaurants", "supermarket"]):
+        services = ["banks", "clinics"]
+        dfs = [get_results(api_key, service, self.borders)
+               for service in services]
+        return pd.concat(dfs)
 
     def census(self):
         pass

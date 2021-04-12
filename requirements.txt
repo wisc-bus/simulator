@@ -6,3 +6,4 @@ geopandas
 descartes
 geopy
 boto3
+pyyaml

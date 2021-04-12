@@ -206,7 +206,7 @@ class BusSim:
         return self.stopTimes_final_df["route_short_name"].unique()
 
     def _is_service_valid(self, day, service_id):
-        # FIXME: hardcode in the service to be 94
+        # FIXME: hardcode in the service to be 95, just pick the first service id
         return (day == 1) & (service_id.str.startswith("95"))
 
     def _get_valid_stopTime(self, df, start_time, elapse_time):
