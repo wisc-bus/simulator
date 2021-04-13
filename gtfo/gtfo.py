@@ -36,11 +36,16 @@ class Gtfo:
                                       config.get_start_points())
         return result_df
 
-    def load_yelp(self, api_key, services=["banks", "clinics", "dentists", "hospitals", "restaurants", "supermarket"]):
-        services = ["banks", "clinics"]
+    def load_yelp(self, api_key, services=["banks", "clinics", "dentists", "hospitals", "restaurants", "supermarket"], cache=True):
+        cache_path = os.path.join(self.out_path, "services.csv")
+        if cache and os.path.exists(cache_path):
+            return pd.read_csv(cache_path)
+
         dfs = [get_results(api_key, service, self.borders)
                for service in services]
-        return pd.concat(dfs)
+        df = pd.concat(dfs)
+        df.to_csv(cache_path, index=False)
+        return df
 
     def add_service_metrics(self, result_gdf, services_gdf):
         # load grid size from a map_identifier (pick the first one on result_gdf)

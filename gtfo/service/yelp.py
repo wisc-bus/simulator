@@ -45,7 +45,7 @@ def get_results(api_key, service, borders):
             response = requests.get(
                 url=endpoint, params=parameters, headers=headers)
             result = response.json()
-            print(len(all_results))
+            # print(len(all_results))
             all_results.extend(result['businesses'])
     df = pd.DataFrame(
         columns=['id', 'service', 'name', 'latitude', 'longitude'])
