@@ -12,6 +12,7 @@ from io import TextIOWrapper
 import os
 from pathlib import Path
 from math import ceil, floor
+from collections import defaultdict
 
 
 class Gtfo:
@@ -62,10 +63,40 @@ class Gtfo:
 
             return [grid]
 
-        services_grid_df = services_gdf.groupby("service").apply(get_grid)
-        return services_grid_df
-        # for service, grid in grids.items():
-        #     pass  # TODO: combine bitmaps here
+        services_grid_series = services_gdf.groupby("service").apply(get_grid)
+        services_counts = defaultdict(list)
+
+        # loop through all map_id in result_gdf
+        # for records with the same filename: group open them and pull out each bitmaps
+        curr_filename = None
+        grid_iter = None
+        for _, row in result_gdf.iterrows():
+            # print(row["map_identifier"])
+            # print(self._parse_map_identifier(row["map_identifier"]))
+            filename, _ = self._parse_map_identifier(row["map_identifier"])
+
+            # check if a new file need to be open
+            if filename != curr_filename:
+                curr_filename = filename
+                grid_iter = SearchResult.grid_iter(filename)
+
+            grid, _ = next(grid_iter, None)
+            # combine bitmaps
+            for service, servicemap in services_grid_series.items():
+                services_counts[service].append(0)
+
+            for y, grid_row in enumerate(grid):
+                for x, bit in enumerate(grid_row):
+                    if bit == 0:
+                        continue
+
+                    for service, servicemap in services_grid_series.items():
+                        services_counts[service][-1] += servicemap[0][y][x]
+
+        for service, col in services_counts.items():
+            result_gdf[service] = col
+
+        return result_gdf
 
     def load_result_map(self, map_identifier):
         filename, idx = self._parse_map_identifier(map_identifier)
