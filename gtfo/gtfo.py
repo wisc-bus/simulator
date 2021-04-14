@@ -36,6 +36,9 @@ class Gtfo:
                                       config.get_start_points())
         return result_df
 
+    def load_census(self):
+        pass
+
     def load_yelp(self, api_key, services=["banks", "clinics", "dentists", "hospitals", "restaurants", "supermarket"], cache=True):
         cache_path = os.path.join(self.out_path, "services.csv")
         if cache and os.path.exists(cache_path):
