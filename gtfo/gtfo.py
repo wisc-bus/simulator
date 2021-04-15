@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import geopandas as gpd
 from shapely.geometry import Polygon
+from shapely.wkt import loads
 from pyproj import Transformer
 from zipfile import ZipFile
 from io import TextIOWrapper
@@ -39,7 +40,14 @@ class Gtfo:
     def load_census(self):
         pass
 
-    def load_yelp(self, api_key, services=["banks", "clinics", "dentists", "hospitals", "restaurants", "supermarket"], cache=True):
+    def load_census_tmp(self):
+        census_df = pd.read_csv("../data/sampleCensusDF.csv")
+        census_df['geometry'] = census_df['geometry'].apply(loads)
+        census_gdf = gpd.GeoDataFrame(
+            census_df, geometry="geometry")
+        return census_gdf
+
+    def load_yelp(self, api_key, services=["banks", "clinics", "dentists", "hospitals", "supermarket"], cache=True):
         cache_path = os.path.join(self.out_path, "services.csv")
         if cache and os.path.exists(cache_path):
             return pd.read_csv(cache_path)

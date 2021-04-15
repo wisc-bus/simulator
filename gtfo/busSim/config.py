@@ -19,7 +19,7 @@ class Config:
         }
 
     def set_starts(self, points=[], centroids=None):
-        if centroids != None:
+        if centroids is not None:
             self._set_starts_from_centroids(centroids)
         if len(points) > 0:
             self._set_starts_from_points(points)
@@ -52,9 +52,9 @@ class Config:
             if type(point) is tuple:
                 self.params_["start_points"].append(point)
             elif type(point) is Point:
-                self.params_["start_points"].append((point.x, point.y))
+                self.params_["start_points"].append((point.y, point.x))
 
     def _set_starts_from_centroids(self, centroids):
         for poly in centroids["geometry"]:
             point = poly.centroid
-            self.params_["start_points"].append((point.x, point.y))
+            self.params_["start_points"].append((point.y, point.x))
