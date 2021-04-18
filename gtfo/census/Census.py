@@ -2,10 +2,7 @@ import pandas as pd
 from shapely.geometry import Point
 from pyproj import Transformer
 import geopandas as gpd
-
-#import matplotlib.pyplot as plt
-#import requests, json
-#from mpl_toolkits.axes_grid1 import make_axes_locatable
+import requests, json
 
 class Census:
     """
@@ -111,7 +108,7 @@ class Census:
     
     
     
-    def getDemographicsData(self, demographics=['Race'], demographicsDefaults=True):
+    def getDemographicsData(self, CensusTracts, demographics=['Race'], demographicsDefaults=True, sample=False):
         """"
         TODO
         if demographicsDefaults==True: then demographics should be a list of strings for demographis to return
@@ -122,8 +119,66 @@ class Census:
             'American Indian and Alaska Native alone':'B02001_004E', 'Asian alone':'B02001_005E', 
             'Native Hawaiian and Other Pacific Islander alone':'B02001_006E'}
         
+        Vehicles = {'Total Vehicles':'B25044_001E'}
         
-        return
+        print("Getting demographics data from Census.gov, this may take a couple minutes...)
+        
+        combined_data = []
+        
+        if sample:
+            CensusTracts = CensusTracts[0:10]
+
+        for row in CensusTracts.iterrows():
+            state = row[1]['STATE']
+            tract = row[1]['TRACT']
+            county = row[1]['COUNTY']
+            blockgroup = row[1]['BLKGRP']
+
+            race_list = [Race[key] for key in Race]
+            car_list = [Vehicles[key] for key in Vehicles]
+            demographics = race_list + car_list
+            demographics = ','.join(demographics)
+
+            url_acs = "https://api.census.gov/data/2019/acs/acs5?"
+            url_demographic = "get=NAME," + str(demographics) + "&"
+            url_location = ("for=block%20group:" + str(blockgroup) + "&in=state:" + str(state) + 
+                            "%20county:" + str(county) + "%20tract:" + str(tract))
+            url = url_acs + url_demographic + url_location
+
+
+            resp = requests.get(url)
+            data = json.loads(resp.text)
+
+            if len(combined_data) == 0:
+                combined_data.append(data[0])
+            combined_data.append(data[1])
+            
+        combined_df = pd.DataFrame(combined_data[1:], columns=combined_data[0])
+        combined_df.rename(columns={'tract':'TRACT', 'state':'STATE', 'county':'COUNTY', 'block group':'BLKGRP'}, inplace=True)
+        
+        joined_df = CensusTracts.merge(combined_df, on=['TRACT', 'STATE', 'COUNTY', 'BLKGRP'])
+        
+        print(type(joined_df))
+        # Id the demographics are the defaults then the stats will be computed and added to the geodataframe, 
+        # if it is not default then the user will have to compute them after the gdf is returned but before it 
+        # is combined with the results from the simulator
+        if demographicsDefaults:
+            
+            joined_df['Tot Pop'] = joined_df['B02001_001E'].astype(int)
+            joined_df['% White alone'] = (joined_df['B02001_002E'].astype(int) / joined_df['B02001_001E'].astype(int))
+            joined_df['% Black or African American alone'] = (joined_df['B02001_003E'].astype(int) /
+                                                              joined_df['B02001_001E'].astype(int))
+            joined_df['% American Indian and Alaska Native alone'] = (joined_df['B02001_004E'].astype(int) / 
+                                                                      joined_df['B02001_001E'].astype(int))
+            joined_df['% Asian alone alone'] = (joined_df['B02001_005E'].astype(int) / 
+                                                joined_df['B02001_001E'].astype(int))
+            joined_df['% Native Hawaiian and Other Pacific Islander alone'] = (joined_df['B02001_006E'].astype(int) / 
+                                                                               joined_df['B02001_001E'].astype(int))
+            
+            joined_df['cars per capita'] = (joined_df['B25044_001E'].astype(int) / joined_df['B02001_001E'].astype(int))
+        
+        
+        return joined_df
     
     
     
