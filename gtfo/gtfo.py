@@ -2,6 +2,7 @@ from .busSim.manager import managerFactory
 from .result.searchResult import SearchResult
 from .util import gen_start_time, transform
 from .service.yelp import get_results
+import .census.Census
 import numpy as np
 import pandas as pd
 import geopandas as gpd
@@ -37,9 +38,33 @@ class Gtfo:
                                       config.get_start_points())
         return result_df
 
-    def load_census(self):
-        pass
-
+    def load_census(self, cache=True):
+        """
+        Looks for a stops.csv file in data/mmt_gtfs, queries TigerWeb Census API to pull out census tracts 
+        based on the center and radius of the system. An optional addition of 1km (default) is added to the radius.
+        From the tracts, and a default set of demographs the ACS 5-year 2019 dataset is queried to get the demographics
+        data for each tract. A few statistics are computed. It returns a geodataframe with all of this information and
+        saves it to the output folder. 
+        
+        cache     default=True, if true will load a saved result and return
+        """
+        
+        # Pull from Cache and return:
+        cache_path = os.path.join(self.out_path, "census.csv")
+        if cache and os.path.exists(cache_path):
+            return pd.read_csv(cache_path)
+        
+        # Create the Geodataframe:
+        c = Census(gtfs_filename="../data/mmt_gtfs/stops.csv")
+        gdf_tracts = c.getCensusTracts()
+        demographic_data = c.getDemographicsData(gdf_tracts, demographics=['Race', 'Vehicles'], sample=True)
+        
+        # Save output:    
+        demographic_data.to_csv(cache_path, index=False) 
+            
+        return demographic_data
+ 
+        
     def load_census_tmp(self):
         census_df = pd.read_csv("../data/sampleCensusDF.csv")
         census_df['geometry'] = census_df['geometry'].apply(loads)
