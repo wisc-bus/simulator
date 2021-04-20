@@ -2,7 +2,7 @@
 
 ## Usage
 
-See example usage in ```notebooks/examples.ipynb```
+See example usage in ```notebooks/example.ipynb```
 
 
 
