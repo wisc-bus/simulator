@@ -1,6 +1,8 @@
 # simulator
 
+## Usage
 
+See example usage in ```notebooks/examples.ipynb```
 
 
 
