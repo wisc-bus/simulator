@@ -52,7 +52,8 @@ class Gtfo:
         # Pull from Cache and return:
         cache_path = os.path.join(self.out_path, "census.csv")
         if cache and os.path.exists(cache_path):
-            return pd.read_csv(cache_path)
+            census_df = pd.read_csv(cache_path)
+            return self._csvdf_to_gdf(census_df)
 
         # Create the Geodataframe:
         c = Census(gtfs_filename="../data/mmt_gtfs/stops.csv")
@@ -63,7 +64,7 @@ class Gtfo:
         # Save output:
         demographic_data.to_csv(cache_path, index=False)
 
-        return demographic_data
+        return self._csvdf_to_gdf(demographic_data)
 
     def load_yelp(self, api_key, services=["banks", "clinics", "dentists", "hospitals", "supermarket"], cache=True):
         cache_path = os.path.join(self.out_path, "services.csv")
@@ -78,12 +79,8 @@ class Gtfo:
 
     def add_service_metrics(self, result_gdf, services_gdf):
         # load grid size from a map_identifier (pick the first one on result_gdf)
-        map_identifier = result_gdf.at[0, "map_identifier"]
-        filename, idx = self._parse_map_identifier(map_identifier)
-        _, grid_size = SearchResult.load_grid(filename, idx)
-        max_x, min_x, max_y, min_y = self.borders
-        x_num = ceil(abs(max_x - min_x) / grid_size)
-        y_num = ceil(abs(max_y - min_y) / grid_size)
+        max_x, min_x, max_y, min_y, grid_size, x_num, y_num = self._load_grid_size(
+            result_gdf)
 
         def get_grid(df):
             grid = np.zeros(x_num*y_num).reshape(y_num, -1)
@@ -129,6 +126,55 @@ class Gtfo:
 
         for service, col in services_counts.items():
             result_gdf[service] = col
+
+        return result_gdf
+
+    def add_demographic_metrics(self, result_gdf, census_gdf):
+        max_x, min_x, max_y, min_y, grid_size, x_num, y_num = self._load_grid_size(
+            result_gdf)
+        # rasterizing census_gdf to a single demographic grid
+        # TODO: this can be optimized using a recursive sub-division strategy
+        # https://gist.github.com/perrette/a78f99b76aed54b6babf3597e0b331f8
+        census_gdf = census_gdf.to_crs(epsg=3174)
+        grid = np.zeros(x_num*y_num).reshape(y_num, -1)
+        grid[:] = np.nan
+        positions = []
+        for y in range(y_num):
+            for x in range(x_num):
+                positions.append((y, x))
+        for index, row in census_gdf.iterrows():
+            for i in range(len(positions) - 1, -1, -1):
+                y, x = positions[i]
+                x0 = grid_size * x + min_x
+                x1 = x0 + grid_size
+                y0 = grid_size * y + min_y
+                y1 = y0 + grid_size
+                rect = Polygon([(x0, y0), (x0, y1), (x1, y1), (x1, y0)])
+                if row["geometry"].contains(rect):
+                    grid[y][x] = index
+                    del positions[i]
+
+        # iterate through all the starting locations (only the unique starting locations)
+        start_to_demographic_dict = {}
+        for result_i, row in result_gdf.iterrows():
+            _, i = self._parse_map_identifier(row["map_identifier"])
+            if i not in start_to_demographic_dict:
+                x, y = transform(row["geometry"].y, row["geometry"].x)
+                x_idx = floor((x - min_x) / grid_size)
+                y_idx = floor((y - min_y) / grid_size)
+                demographic_i = np.nan
+                if x_idx >= 0 and x_idx < x_num and y_idx >= 0 and y_idx < y_num:
+                    demographic_i = grid[y_idx][x_idx]
+                start_to_demographic_dict[i] = demographic_i
+
+            demographic_i = start_to_demographic_dict[i]
+            pop = np.nan
+            cars = np.nan
+            if not np.isnan(demographic_i):
+                pop = census_gdf.at[demographic_i, "Tot Pop"]
+                cars = census_gdf.at[demographic_i, "cars per capita"]
+            result_gdf.at[result_i, "Tot Pop"] = pop
+            result_gdf.at[result_i, "cars per capita"] = cars
 
         return result_gdf
 
@@ -201,3 +247,19 @@ class Gtfo:
         if len(tokens) != 2 or not tokens[1].isnumeric():
             raise Exception("invalid map_identifier")
         return os.path.join(self.out_path, tokens[0]), int(tokens[1])
+
+    def _load_grid_size(self, result_gdf):
+        map_identifier = result_gdf.at[0, "map_identifier"]
+        filename, idx = self._parse_map_identifier(map_identifier)
+        _, grid_size = SearchResult.load_grid(filename, idx)
+        max_x, min_x, max_y, min_y = self.borders
+        x_num = ceil(abs(max_x - min_x) / grid_size)
+        y_num = ceil(abs(max_y - min_y) / grid_size)
+
+        return max_x, min_x, max_y, min_y, grid_size, x_num, y_num
+
+    def _csvdf_to_gdf(self, df):
+        df['geometry'] = df['geometry'].apply(loads)
+        gdf = gpd.GeoDataFrame(
+            df, geometry="geometry", crs="EPSG:4326")
+        return gdf

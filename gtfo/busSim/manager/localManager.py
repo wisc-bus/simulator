@@ -33,7 +33,7 @@ class LocalManager(BaseManager):
                 result.record(start_point, grid)
 
                 result_df.loc[idx, "geometry"] = Point(
-                    start_point[0], start_point[1])
+                    start_point[1], start_point[0])
                 result_df.loc[idx, "start_time"] = start_time
                 result_df.loc[idx,
                               "map_identifier"] = f"{filename}!{stop_idx}"
