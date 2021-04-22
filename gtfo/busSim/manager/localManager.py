@@ -29,7 +29,7 @@ class LocalManager(BaseManager):
             # run busSim search on every start_point
             for start_point in start_points:
                 grid = busSim.get_access_grid(
-                    start_point=start_point, grid_size_min=busSim_params["grid_size_min"])
+                    start_point=start_point, grid_size_min=busSim_params["grid_size_min"], route_remove=busSim_params["route_remove"])
                 result.record(start_point, grid)
 
                 result_df.loc[idx, "geometry"] = Point(

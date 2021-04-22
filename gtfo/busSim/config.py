@@ -4,7 +4,7 @@ from shapely.geometry import Point
 
 
 class Config:
-    def __init__(self, day, elapse_time, interval, avg_walking_speed=1.4, max_walking_min=None, grid_size_min=2, run_env="local"):
+    def __init__(self, day, elapse_time, interval, avg_walking_speed=1.4, max_walking_min=None, grid_size_min=2, route_remove=[], run_env="local"):
         self.params_ = {
             "run_env": run_env,
             "busSim_params": {
@@ -12,7 +12,8 @@ class Config:
                 "elapse_time": elapse_time,
                 "avg_walking_speed": avg_walking_speed,
                 "max_walking_min": max_walking_min if max_walking_min != None else tomin(elapse_time),
-                "grid_size_min": grid_size_min
+                "grid_size_min": grid_size_min,
+                "route_remove": route_remove
             },
             "interval": interval,
             "start_points": []
