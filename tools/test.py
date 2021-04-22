@@ -67,21 +67,33 @@
 #     # gen_expected()
 #     run_test()
 
-from gtfo import Gtfo
-config = {
-    "run_env": "local",
-    "busSim_params": {
-        "day": "monday",
-        "elapse_time": "00:30:00",
-        "avg_walking_speed": 1.4,
-        "max_walking_min": 10,
-        "grid_size_min": 2
-    },
-    "interval": "10:00:00",
-    "start_points": [(43.073691, -89.387407)],
-    "route_remove": [1, 10]
-}
+from pathlib import Path
+import sys
+import yaml
+import time
 
-gtfo = Gtfo("./data/mmt_gtfs.zip",
-            "./data/plot/background/madison-meter-shp", "/tmp")
-search_result = gtfo.search(config)
+import numpy as np
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+DIR = Path('..')
+sys.path.append(str(DIR))
+from gtfo import Gtfo
+from gtfo.busSim import BusSim, Config
+from gtfo.busSim.manager import managerFactory
+
+
+gtfo = Gtfo("../data/mmt_gtfs.zip")
+census_gdf = gtfo.load_census()
+services_gdf = gtfo.load_yelp(api_key=None)
+
+routes = [80,  2, 70,  8, 10,  7,  4, 30,  6, 39, 84, 31,  5, 21, 17, 20, 15, 16, 18, 50, 40, 22, 26, 73, 67, 52, 13, 36, 32]
+for route in routes:
+    print(route)
+    config = Config(day="monday", elapse_time="00:30:00", interval="06:10:00", max_walking_min=10, route_remove=[route])
+    config.set_starts(centroids=census_gdf)
+    result_gdf = gtfo.search(config)
+    gtfo.add_service_metrics(result_gdf, services_gdf)
+    gtfo.add_demographic_metrics(result_gdf, census_gdf)
+    result_gdf.to_csv(f"../out/result{route}.csv", index=False)
+    break

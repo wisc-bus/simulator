@@ -89,8 +89,13 @@ class BusSim:
             mid_x_idx = (max_x_idx + min_x_idx) / 2
             mid_y_idx = (max_y_idx + min_y_idx) / 2
 
-            for y in range(min_y_idx, max_y_idx+1):
-                for x in range(min_x_idx, max_x_idx+1):
+            start_y = max(0, min_y_idx)
+            start_x = max(0, min_x_idx)
+            end_y = min(max_y_idx+1, y_num)
+            end_x = min(max_x_idx+1, x_num)
+
+            for y in range(start_y, end_y):
+                for x in range(start_x, end_x):
                     # check 4 corners, if the distance for all of them is greater than radius, then this grid is not in the circle
                     if (y - mid_y_idx) ** 2 + (x - mid_x_idx) ** 2 < radius_idx ** 2 or \
                         (y - mid_y_idx) ** 2 + (x + 1 - mid_x_idx) ** 2 < radius_idx ** 2 or \
