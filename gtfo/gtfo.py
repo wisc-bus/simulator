@@ -132,47 +132,23 @@ class Gtfo:
     def add_demographic_metrics(self, result_gdf, census_gdf):
         max_x, min_x, max_y, min_y, grid_size, x_num, y_num = self._load_grid_size(
             result_gdf)
-        # rasterizing census_gdf to a single demographic grid
-        # TODO: this can be optimized using a recursive sub-division strategy
-        # https://gist.github.com/perrette/a78f99b76aed54b6babf3597e0b331f8
-        census_gdf = census_gdf.to_crs(epsg=3174)
-        grid = np.zeros(x_num*y_num).reshape(y_num, -1)
-        grid[:] = np.nan
-        positions = []
-        for y in range(y_num):
-            for x in range(x_num):
-                positions.append((y, x))
-        for index, row in census_gdf.iterrows():
-            for i in range(len(positions) - 1, -1, -1):
-                y, x = positions[i]
-                x0 = grid_size * x + min_x
-                x1 = x0 + grid_size
-                y0 = grid_size * y + min_y
-                y1 = y0 + grid_size
-                rect = Polygon([(x0, y0), (x0, y1), (x1, y1), (x1, y0)])
-                if row["geometry"].contains(rect):
-                    grid[y][x] = index
-                    del positions[i]
 
         # iterate through all the starting locations (only the unique starting locations)
         start_to_demographic_dict = {}
         for result_i, row in result_gdf.iterrows():
             _, i = self._parse_map_identifier(row["map_identifier"])
             if i not in start_to_demographic_dict:
-                x, y = transform(row["geometry"].y, row["geometry"].x)
-                x_idx = floor((x - min_x) / grid_size)
-                y_idx = floor((y - min_y) / grid_size)
-                demographic_i = np.nan
-                if x_idx >= 0 and x_idx < x_num and y_idx >= 0 and y_idx < y_num:
-                    demographic_i = grid[y_idx][x_idx]
-                start_to_demographic_dict[i] = demographic_i
-
-            demographic_i = start_to_demographic_dict[i]
+                start_to_demographic_dict[i] = np.nan
+                for census_i, census_row in census_gdf.iterrows():
+                    if census_row["geometry"].contains(row["geometry"]):
+                        start_to_demographic_dict[i] = census_i
+                        break
             pop = np.nan
             cars = np.nan
-            if not np.isnan(demographic_i):
-                pop = census_gdf.at[demographic_i, "Tot Pop"]
-                cars = census_gdf.at[demographic_i, "cars per capita"]
+            if not np.isnan(start_to_demographic_dict[i]):
+                pop = census_gdf.at[start_to_demographic_dict[i], "Tot Pop"]
+                cars = census_gdf.at[start_to_demographic_dict[i],
+                                     "cars per capita"]
             result_gdf.at[result_i, "Tot Pop"] = pop
             result_gdf.at[result_i, "cars per capita"] = cars
 
