@@ -15,6 +15,7 @@ import os
 from pathlib import Path
 from math import ceil, floor
 from collections import defaultdict
+import time
 
 
 class Gtfo:
@@ -23,7 +24,7 @@ class Gtfo:
         self.out_path = self._get_out_path()
         self._preprocess_gtfs()
 
-    def search(self, config):
+    def search(self, config, perf_df=None):
         # prerun check
         if not config.is_runnable():
             raise Exception("The current config is not runnable")
@@ -35,7 +36,7 @@ class Gtfo:
         start_times = gen_start_time(
             config.get_interval(), config.get_busSim_params().get("elapse_time"))
         result_df = manager.run_batch(config.get_busSim_params(), start_times,
-                                      config.get_start_points())
+                                      config.get_start_points(), perf_df)
         return result_df
 
     def load_census(self, cache=True):
@@ -77,10 +78,11 @@ class Gtfo:
         df.to_csv(cache_path, index=False)
         return df
 
-    def add_service_metrics(self, result_gdf, services_gdf):
+    def add_service_metrics(self, result_gdf, services_gdf, perf_df=None):
         # load grid size from a map_identifier (pick the first one on result_gdf)
         max_x, min_x, max_y, min_y, grid_size, x_num, y_num = self._load_grid_size(
             result_gdf)
+        record_perf = (perf_df is not None)
 
         def get_grid(df):
             grid = np.zeros(x_num*y_num).reshape(y_num, -1)
@@ -96,14 +98,14 @@ class Gtfo:
 
         services_grid_series = services_gdf.groupby("service").apply(get_grid)
         services_counts = defaultdict(list)
+        service_perfs = []
 
         # loop through all map_id in result_gdf
         # for records with the same filename: group open them and pull out each bitmaps
         curr_filename = None
         grid_iter = None
         for _, row in result_gdf.iterrows():
-            # print(row["map_identifier"])
-            # print(self._parse_map_identifier(row["map_identifier"]))
+            s = time.time()
             filename, _ = self._parse_map_identifier(row["map_identifier"])
 
             # check if a new file need to be open
@@ -124,18 +126,25 @@ class Gtfo:
                     for service, servicemap in services_grid_series.items():
                         services_counts[service][-1] += servicemap[0][y][x]
 
+            service_perfs.append(time.time() - s)
+
         for service, col in services_counts.items():
             result_gdf[service] = col
 
+        if record_perf:
+            perf_df["add_service_time"] = service_perfs
+
         return result_gdf
 
-    def add_demographic_metrics(self, result_gdf, census_gdf):
+    def add_demographic_metrics(self, result_gdf, census_gdf, perf_df=None):
         max_x, min_x, max_y, min_y, grid_size, x_num, y_num = self._load_grid_size(
             result_gdf)
+        record_perf = (perf_df is not None)
 
         # iterate through all the starting locations (only the unique starting locations)
         start_to_demographic_dict = {}
         for result_i, row in result_gdf.iterrows():
+            s = time.time()
             _, i = self._parse_map_identifier(row["map_identifier"])
             if i not in start_to_demographic_dict:
                 start_to_demographic_dict[i] = np.nan
@@ -151,6 +160,9 @@ class Gtfo:
                                      "cars per capita"]
             result_gdf.at[result_i, "Tot Pop"] = pop
             result_gdf.at[result_i, "cars per capita"] = cars
+
+            if record_perf:
+                perf_df.at[result_i, "add_census_time"] = time.time() - s
 
         return result_gdf
 

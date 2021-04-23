@@ -13,7 +13,7 @@ def _init_logger():
 
     # init file handler
     handler = logging.FileHandler(LOG_FILE_PATH)
-    handler.setLevel(logging.DEBUG)
+    handler.setLevel(logging.WARNING)
     formatter = logging.Formatter(
         '%(asctime)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
