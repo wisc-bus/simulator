@@ -21,8 +21,16 @@ import time
 class Gtfo:
     def __init__(self, gtfs_path):
         self.gtfs_path = gtfs_path
-        self.out_path = self._get_out_path()
+        self.base_out_path = self._get_out_path()
+        self.out_path = self.base_out_path
         self._preprocess_gtfs()
+
+    def set_batch_label(self, label):
+        self.out_path = os.path.join(self.base_out_path, label)
+        Path(self.out_path).mkdir(parents=True, exist_ok=True)
+
+    def reset_batch_label(self):
+        self.out_path = self.base_out_path
 
     def search(self, config, perf_df=None):
         # prerun check
@@ -51,7 +59,7 @@ class Gtfo:
         """
 
         # Pull from Cache and return:
-        cache_path = os.path.join(self.out_path, "census.csv")
+        cache_path = os.path.join(self.base_out_path, "census.csv")
         if cache and os.path.exists(cache_path):
             census_df = pd.read_csv(cache_path)
             return self._csvdf_to_gdf(census_df)
@@ -68,7 +76,7 @@ class Gtfo:
         return self._csvdf_to_gdf(demographic_data)
 
     def load_yelp(self, api_key, services=["banks", "clinics", "dentists", "hospitals", "supermarket"], cache=True):
-        cache_path = os.path.join(self.out_path, "services.csv")
+        cache_path = os.path.join(self.base_out_path, "services.csv")
         if cache and os.path.exists(cache_path):
             return pd.read_csv(cache_path)
 
