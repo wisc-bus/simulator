@@ -61,6 +61,7 @@ def split_routes(zpaths, tmpdirs):
             curr_f.close()
 
 def diff_routes(zpaths, tmpdirs):
+    html = ["<html><body><h1>Changes</h1>\n"]
     names = []
     for d in tmpdirs:
         names.extend(os.listdir(d))
@@ -70,7 +71,8 @@ def diff_routes(zpaths, tmpdirs):
         for tdir in tmpdirs:
             path = os.path.join(tdir, name)
             if not os.path.exists(path):
-                cumsum_trips.append(pd.Series())
+                cumsum_trips.append(pd.Series(dtype=int))
+                continue
             df = pd.read_csv(path)[["trip_id", "arrival_time"]]
             df["arrival_time"] = df["arrival_time"].apply(tomin)
             df.sort_values(by="arrival_time", inplace=True)
@@ -79,11 +81,14 @@ def diff_routes(zpaths, tmpdirs):
 
         # how many differ from the first one?
         diffs = 0
-        for cumsum_trip in cumsum_trips[1:]
-        if len(cumsum_trips[0]) == len(cumsum_trip):
-            if (cumsum_trips[0].index == cumsum_trip.index).all():
-                if (cumsum_trips[0] == cumsum_trip).all():
-                    diff += 1
+        for cumsum_trip in cumsum_trips[1:]:
+            changed = True
+            if len(cumsum_trips[0]) == len(cumsum_trip):
+                if (cumsum_trips[0].index == cumsum_trip.index).all():
+                    if (cumsum_trips[0] == cumsum_trip).all():
+                        changed = False
+            if changed:
+                diffs += 1
 
         # if at least one difference, plot it
         if diffs:
@@ -94,7 +99,18 @@ def diff_routes(zpaths, tmpdirs):
             ax.legend()
             ax.set_xlabel("minutes into day")
             ax.set_ylabel("cumulative trips started")
-            ax.get_figure().savefig(name.replace(".txt", ".svg"), format="svg", bbox_layout="tight")
+            ax.set_title(name.split(".")[0])
+            buf = io.StringIO()
+            ax.get_figure().savefig(buf, format="svg",
+                                    bbox_layout="tight")
+            plt.close(fig)
+            html.append(buf.getvalue())
+            html.append("<br>")
+
+    html.append("</body></html>")
+    print(f"\nsaving diff to diff.html")
+    with open("diff.html", "w") as f:
+        f.write("\n".join(html))
 
 if __name__ == '__main__':
      main()

@@ -56,10 +56,8 @@ def edit_double(trips_hdr, stop_times_hdr, trips, trip_id_gen):
             set_trip_id(new_trip, next(trip_id_gen), trip_id_idx, stop_times_trip_id_idx)
             trips.append(new_trip)
 
-def edit_half(trips_hdr, stop_times_hdr, trips, trip_id_gen):
-    trips_new = trips[::2]
+def edit_delete(trips_hdr, stop_times_hdr, trips, trip_id_gen):
     trips.clear()
-    trips.extend(trips_new)
 
 def copy_with_edits(path1, path2, edit_fn, route):
     with zipfile.ZipFile(path1) as zf1, zipfile.ZipFile(path2, "w", compression=zipfile.ZIP_DEFLATED) as zf2:
@@ -158,13 +156,15 @@ def copy_with_edits(path1, path2, edit_fn, route):
                 w.writerow(trip.row)
 
 def main():
+    edit_fns = {"delete": edit_delete, "double": edit_double}
+    
     if len(sys.argv) != 5:
-        print("Usage: python3 gtfs_edit.py <orig-gtfs.zip> <new-gtfs.zip> <operation> <route>")
+        ops = "|".join(sorted(set(edit_fns.keys())))
+        print(f"Usage: python3 gtfs_edit.py <orig-gtfs.zip> <new-gtfs.zip> ({ops}) <route>")
         print("Example: python3 gtfs_edit.py mmt_gtfs.zip out.zip half 80")
         sys.exit(1)
 
     path1, path2, op, route = sys.argv[1:]
-    edit_fns = {"half": edit_half, "double": edit_double}
     if not op in edit_fns:
         print(f"{op} is not a valid operation.  Choose one of these:")
         print(",".join(sorted(edit_fns.keys())))
