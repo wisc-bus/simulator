@@ -1,1 +1,1 @@
-from .gtfo import *
+from .SCanalyzer import *

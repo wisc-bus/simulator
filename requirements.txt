@@ -1,4 +1,5 @@
 # Graph plotting
+requests
 jupyter
 matplotlib
 pandas

@@ -18,7 +18,7 @@ from collections import defaultdict
 import time
 
 
-class Gtfo:
+class SCanalyzer:
     def __init__(self, gtfs_path):
         self.gtfs_path = gtfs_path
         self.base_out_path = self._get_out_path()
