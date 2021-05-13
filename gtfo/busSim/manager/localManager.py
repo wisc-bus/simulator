@@ -39,6 +39,7 @@ class LocalManager(BaseManager):
                 result.record(start_point, grid)
 
                 point = Point(start_point[1], start_point[0])
+                # result_df.loc[idx, "area_sum"] = grid.sum()
                 result_df.loc[idx, "geometry"] = point
                 result_df.loc[idx, "start_time"] = start_time
                 result_df.loc[idx,

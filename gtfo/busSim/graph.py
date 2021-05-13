@@ -42,7 +42,7 @@ class Node:
         return d
 
     def __str__(self):
-        return f"trip_id: {self.trip_id} route_short_name: {self.route_short_name} stop_sequence: {self.stop_sequence} stop_id: {self.stop_id} stop_x: {self.stop_x} stop_y: {self.stop_y} arrival_time: {self.arrival_time} walking_distance: {self.walking_distance}"
+        return f"({self.trip_id}, {self.route_short_name}, {self.stop_sequence}, {self.stop_id}, {self.arrival_time}, {self.walking_distance}"
 
     def __repr__(self):
         rv = self.__str__()
@@ -122,6 +122,7 @@ class Graph:
         pq = [(0, start)]
         while len(pq) > 0:
             curr_distance, curr_node = heapq.heappop(pq)
+            # print(f"curr_distance: {curr_distance} curr_node: {curr_node}")
 
             if curr_distance > curr_node.walking_distance:
                 continue
@@ -185,11 +186,12 @@ class Graph:
         # wait on the stop
         for stop_id, nodes in stop_node_dict.items():
             for i in range(len(nodes)):
-                for j in range(i+1, len(nodes)):
+                for j in range(len(nodes)):
                     start = nodes[i]
                     end = nodes[j]
-                    nodeCostPair = NodeCostPair(end, 0)
-                    start.children.append(nodeCostPair)
+                    if start.arrival_time < end.arrival_time:
+                        nodeCostPair = NodeCostPair(end, 0)
+                        start.children.append(nodeCostPair)
 
         # walk
         for x in range(x_num):
@@ -203,7 +205,7 @@ class Graph:
                 for start in start_bucket:
                     for end_bucket in end_buckets:
                         for end in end_bucket:
-                            if start.arrival_time >= end.arrival_time:
+                            if start.arrival_time >= end.arrival_time or start.stop_id == end.stop_id:
                                 continue
 
                             # walk

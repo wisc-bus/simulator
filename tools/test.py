@@ -76,24 +76,20 @@ import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
 
-DIR = Path('..')
+DIR = Path('/Users/changxu/Desktop/projects/simulator/tools/..')
 sys.path.append(str(DIR))
+# print(sys.path)
 from gtfo import Gtfo
 from gtfo.busSim import BusSim, Config
 from gtfo.busSim.manager import managerFactory
 
 
-gtfo = Gtfo("../data/mmt_gtfs.zip")
+gtfo = Gtfo("./data/out.zip")
 census_gdf = gtfo.load_census()
-services_gdf = gtfo.load_yelp(api_key=None)
+config = Config(day="monday", elapse_time="00:30:00", interval="10:30:00", max_walking_min=10)
+# config.set_starts(points=[(43.073691, -89.387407), (43.073691, -89.387407)])
+config.set_starts(centroids=census_gdf)
+t0 = time.time()
+result_gdf = gtfo.search(config)
 
-routes = [80,  2, 70,  8, 10,  7,  4, 30,  6, 39, 84, 31,  5, 21, 17, 20, 15, 16, 18, 50, 40, 22, 26, 73, 67, 52, 13, 36, 32]
-for route in routes:
-    print(route)
-    config = Config(day="monday", elapse_time="00:30:00", interval="06:10:00", max_walking_min=10, route_remove=[route])
-    config.set_starts(centroids=census_gdf)
-    result_gdf = gtfo.search(config)
-    gtfo.add_service_metrics(result_gdf, services_gdf)
-    gtfo.add_demographic_metrics(result_gdf, census_gdf)
-    result_gdf.to_csv(f"../out/result{route}.csv", index=False)
-    break
+result_gdf.get_access_grid(start_point=(43.02854678448197, -89.46876664203126)).sum()
