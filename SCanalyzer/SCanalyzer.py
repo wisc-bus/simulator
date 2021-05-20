@@ -197,8 +197,8 @@ class SCanalyzer:
         return gdf
 
     def _get_out_path(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        out_path = os.path.join(dir_path, os.pardir, "out")
+        dir_path = Path().absolute()
+        out_path = os.path.join(dir_path, "out")
         Path(out_path).mkdir(parents=True, exist_ok=True)
         return out_path
 

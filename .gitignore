@@ -140,4 +140,4 @@ dmypy.json
 lambda/lambda_layers
 
 # out path
-/out 
+out
