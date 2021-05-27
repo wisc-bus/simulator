@@ -21,10 +21,10 @@ class AWSManager(BaseManager):
         # self._upload_data(gtfs_path, city_path)
         self._upload_lambda()
 
-    def read_gtfs(self, filename):
+    def run_batch(self, filename):
         pass
 
-    def read_city(self):
+    def read_gtfs(self):
         pass
 
     def save(self, result):

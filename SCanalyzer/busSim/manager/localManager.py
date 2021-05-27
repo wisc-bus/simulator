@@ -14,7 +14,11 @@ class LocalManager(BaseManager):
         super().__init__(gtfs_path, borders)
         self.out_path = out_path
 
-    def run_batch(self, busSim_params, start_times, start_points, perf_df=None):
+    def run_batch(self, config, perf_df=None):
+        busSim_params = config.get_busSim_params()
+        start_times = config.get_start_times()
+        start_points = config.get_start_points()
+
         result_df = pd.DataFrame(
             columns=["geometry", "start_time", "map_identifier"])
         record_perf = (perf_df is not None)

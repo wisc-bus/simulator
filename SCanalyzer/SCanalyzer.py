@@ -1,6 +1,6 @@
 from .busSim.manager import managerFactory
 from .result.searchResult import SearchResult
-from .util import gen_start_time, transform
+from .util import transform
 from .service.yelp import get_results
 from .census import Census
 import numpy as np
@@ -41,10 +41,8 @@ class SCanalyzer:
         manager = managerFactory.create(
             config.get_run_env(), gtfs_path=self.gtfs_path, out_path=self.out_path, borders=self.borders)
 
-        start_times = gen_start_time(
-            config.get_interval(), config.get_busSim_params().get("elapse_time"))
-        result_df = manager.run_batch(config.get_busSim_params(), start_times,
-                                      config.get_start_points(), perf_df)
+        result_df = manager.run_batch(config, perf_df)
+
         return result_df
 
     def load_census(self, cache=True):
