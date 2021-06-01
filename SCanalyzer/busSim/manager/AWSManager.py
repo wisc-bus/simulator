@@ -55,7 +55,7 @@ class AWSManager(BaseManager):
 
     def _upload_lambda(self):
         self.roleArn, self.policyArn = self._create_lambda_role()
-        # self._upload_lambda_function()
+        self._upload_lambda_function()
 
     def _create_lambda_role(self):
         # create IAM role
