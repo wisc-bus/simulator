@@ -1,6 +1,7 @@
 from .busSim.manager import managerFactory
 from .result.searchResult import SearchResult
 from .util import gen_start_time, transform
+from .gtfs_edit import copy_with_edits
 from .service.yelp import get_results
 from .census import Census
 import numpy as np
@@ -21,9 +22,20 @@ import time
 class SCanalyzer:
     def __init__(self, gtfs_path):
         self.gtfs_path = gtfs_path
+        self.orig_gtfs_path = gtfs_path
         self.base_out_path = self._get_out_path()
         self.out_path = self.base_out_path
         self._preprocess_gtfs()
+
+    def gtfs_edit(self, edit_fn, route, from_orig=True):
+        orig_gtfs_name = os.path.basename(self.orig_gtfs_path)
+        modified_gtfs_name = f"{edit_fn.__name__}-{route}-{orig_gtfs_name}"
+        modified_gtfs_path = os.path.join(
+            self.base_out_path, modified_gtfs_name)
+
+        from_path = self.orig_gtfs_path if from_orig else self.gtfs_path
+        copy_with_edits(from_path, modified_gtfs_path, edit_fn, route)
+        self.gtfs_path = modified_gtfs_path
 
     def set_batch_label(self, label):
         self.out_path = os.path.join(self.base_out_path, label)

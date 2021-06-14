@@ -5,9 +5,9 @@ import io
 import itertools
 import sys
 from collections import namedtuple, defaultdict
-from util import tosec, fsec
+from .util import tosec, fsec
 
-VERBOSE = True
+VERBOSE = False
 Trip = namedtuple("Trip", ["row", "stop_times"])
 
 
