@@ -1,9 +1,15 @@
-import zipfile, shutil, csv, io, itertools, sys
+import zipfile
+import shutil
+import csv
+import io
+import itertools
+import sys
 from collections import namedtuple, defaultdict
-from util import tomin, fmin
+from util import tosec, fsec
 
 VERBOSE = True
 Trip = namedtuple("Trip", ["row", "stop_times"])
+
 
 def print_trips(trips_hdr, arrival_idx, trips):
     service_idx = trips_hdr.index("service_id")
@@ -12,23 +18,26 @@ def print_trips(trips_hdr, arrival_idx, trips):
     for trip in trips:
         times = [str(stime[arrival_idx]) for stime in trip.stop_times]
         print(f"TRIP({trip.row[service_idx]}, {trip.row[direction_id_idx]}, {trip.row[trip_id_idx]}): "
-              + ", ".join(times[:8]) + " (min since day start)...")
+              + ", ".join(times[:8]) + " (sec since day start)...")
     print(f"TOTAL TRIPS: {len(trips)}")
 
+
 def copy_trip(trip1, trip2_start, arrival_idx, departure_idx):
-    min_inc = trip2_start - trip1.stop_times[0][arrival_idx]
+    sec_inc = trip2_start - trip1.stop_times[0][arrival_idx]
     trip2 = Trip(row=trip1.row.copy(), stop_times=[])
     for stime1 in trip1.stop_times:
         stime2 = stime1.copy()
-        stime2[arrival_idx] += min_inc
-        stime2[departure_idx] += min_inc
+        stime2[arrival_idx] += sec_inc
+        stime2[departure_idx] += sec_inc
         trip2.stop_times.append(stime2)
     return trip2
+
 
 def set_trip_id(trip, trip_id, trip_id_idx, stop_times_trip_id_idx):
     trip.row[trip_id_idx] = trip_id
     for stime in trip.stop_times:
         stime[stop_times_trip_id_idx] = trip_id
+
 
 def edit_double(trips_hdr, stop_times_hdr, trips, trip_id_gen):
     trip_id_idx = trips_hdr.index("trip_id")
@@ -42,7 +51,8 @@ def edit_double(trips_hdr, stop_times_hdr, trips, trip_id_gen):
     # key: (service, route, direction), val: list of trips
     groups = defaultdict(list)
     for trip in trips:
-        key = (trip.row[service_idx], trip.row[route_idx], trip.row[direction_id_idx])
+        key = (trip.row[service_idx], trip.row[route_idx],
+               trip.row[direction_id_idx])
         groups[key].append(trip)
 
     for group in groups.values():
@@ -53,11 +63,14 @@ def edit_double(trips_hdr, stop_times_hdr, trips, trip_id_gen):
                               trip_after.stop_times[0][arrival_idx]) // 2
             new_trip = copy_trip(trip_before, new_start_time,
                                  arrival_idx, departure_idx)
-            set_trip_id(new_trip, next(trip_id_gen), trip_id_idx, stop_times_trip_id_idx)
+            set_trip_id(new_trip, next(trip_id_gen),
+                        trip_id_idx, stop_times_trip_id_idx)
             trips.append(new_trip)
+
 
 def edit_delete(trips_hdr, stop_times_hdr, trips, trip_id_gen):
     trips.clear()
+
 
 def copy_with_edits(path1, path2, edit_fn, route):
     with zipfile.ZipFile(path1) as zf1, zipfile.ZipFile(path2, "w", compression=zipfile.ZIP_DEFLATED) as zf2:
@@ -68,7 +81,7 @@ def copy_with_edits(path1, path2, edit_fn, route):
                     shutil.copyfileobj(f1, f2)
 
         # STEP 2: separate trips that might get changed, copy trips that will not
-        trips_changed = {} # key=trip_id, val=Trip object
+        trips_changed = {}  # key=trip_id, val=Trip object
         trips_unchanged = []
         max_trip_id = 0
         with zf1.open("trips.txt") as f:
@@ -106,13 +119,12 @@ def copy_with_edits(path1, path2, edit_fn, route):
                     w.writerow(stime)
 
             # STEP 4: callback to determine edits
-            
-            # change times (str) to minutes (int) prior to edits
+            # change times (str) to seconds (int) prior to edits
             trips_changed_lst = list(trips_changed.values())
             for trip in trips_changed_lst:
                 for stime in trip.stop_times:
-                    stime[arrival_idx] = tomin(stime[arrival_idx])
-                    stime[departure_idx] = tomin(stime[departure_idx])
+                    stime[arrival_idx] = tosec(stime[arrival_idx])
+                    stime[departure_idx] = tosec(stime[departure_idx])
                 trip.stop_times.sort(key=lambda stime: stime[arrival_idx])
 
             def sort_key(trip):
@@ -135,11 +147,11 @@ def copy_with_edits(path1, path2, edit_fn, route):
                 print("\nAFTER CHANGES:")
                 print_trips(trips_hdr, arrival_idx, trips_changed_lst)
 
-            # change minutes (int) back to times (str)
+            # change seconds (int) back to times (str)
             for trip in trips_changed_lst:
                 for stime in trip.stop_times:
-                    stime[arrival_idx] = fmin(stime[arrival_idx])
-                    stime[departure_idx] = fmin(stime[departure_idx])
+                    stime[arrival_idx] = fsec(stime[arrival_idx])
+                    stime[departure_idx] = fsec(stime[departure_idx])
 
             # STEP 5: copy over modified stop_times
             for trip in trips_changed_lst:
@@ -155,12 +167,14 @@ def copy_with_edits(path1, path2, edit_fn, route):
             for trip in trips_changed_lst:
                 w.writerow(trip.row)
 
+
 def main():
     edit_fns = {"delete": edit_delete, "double": edit_double}
-    
+
     if len(sys.argv) != 5:
         ops = "|".join(sorted(set(edit_fns.keys())))
-        print(f"Usage: python3 gtfs_edit.py <orig-gtfs.zip> <new-gtfs.zip> ({ops}) <route>")
+        print(
+            f"Usage: python3 gtfs_edit.py <orig-gtfs.zip> <new-gtfs.zip> ({ops}) <route>")
         print("Example: python3 gtfs_edit.py mmt_gtfs.zip out.zip half 80")
         sys.exit(1)
 
@@ -172,5 +186,6 @@ def main():
 
     copy_with_edits(path1, path2, edit_fns[op], route)
 
+
 if __name__ == '__main__':
-     main()
+    main()

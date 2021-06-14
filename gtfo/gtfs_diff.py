@@ -1,10 +1,17 @@
-import os, sys, json, zipfile, csv, shutil, io
+import os
+import sys
+import json
+import zipfile
+import csv
+import shutil
+import io
 from collections import namedtuple
-from util import tomin, fmin
+from util import tosec, fsec
 import pandas as pd
 import matplotlib.pyplot as plt
 
 Trip = namedtuple("Trip", ["service", "route", "direction"])
+
 
 def main():
     if len(sys.argv) != 3:
@@ -20,6 +27,7 @@ def main():
 
     # step 2: do a diff on each trip group
     diff_routes(zpaths, tmpdirs)
+
 
 def split_routes(zpaths, tmpdirs):
     for zpath, tmpdir in zip(zpaths, tmpdirs):
@@ -60,6 +68,7 @@ def split_routes(zpaths, tmpdirs):
                     curr_writer.writerow(row)
             curr_f.close()
 
+
 def diff_routes(zpaths, tmpdirs):
     html = ["<html><body><h1>Changes</h1>\n"]
     names = []
@@ -74,10 +83,11 @@ def diff_routes(zpaths, tmpdirs):
                 cumsum_trips.append(pd.Series(dtype=int))
                 continue
             df = pd.read_csv(path)[["trip_id", "arrival_time"]]
-            df["arrival_time"] = df["arrival_time"].apply(tomin)
+            df["arrival_time"] = df["arrival_time"].apply(tosec)
             df.sort_values(by="arrival_time", inplace=True)
             df.drop_duplicates("trip_id", keep="first", inplace=True)
-            cumsum_trips.append(df["arrival_time"].value_counts().sort_index().cumsum())
+            cumsum_trips.append(
+                df["arrival_time"].value_counts().sort_index().cumsum())
 
         # how many differ from the first one?
         diffs = 0
@@ -112,5 +122,6 @@ def diff_routes(zpaths, tmpdirs):
     with open("diff.html", "w") as f:
         f.write("\n".join(html))
 
+
 if __name__ == '__main__':
-     main()
+    main()
