@@ -157,6 +157,7 @@ class SCanalyzer:
         return result_gdf
 
     def add_demographic_metrics(self, result_gdf, census_gdf, perf_df=None):
+        stats = census_gdf.columns
         max_x, min_x, max_y, min_y, grid_size, x_num, y_num = self._load_grid_size(
             result_gdf)
         record_perf = (perf_df is not None)
@@ -172,14 +173,11 @@ class SCanalyzer:
                     if census_row["geometry"].contains(row["geometry"]):
                         start_to_demographic_dict[i] = census_i
                         break
-            pop = np.nan
-            cars = np.nan
+
             if not np.isnan(start_to_demographic_dict[i]):
-                pop = census_gdf.at[start_to_demographic_dict[i], "Tot Pop"]
-                cars = census_gdf.at[start_to_demographic_dict[i],
-                                     "cars per capita"]
-            result_gdf.at[result_i, "Tot Pop"] = pop
-            result_gdf.at[result_i, "cars per capita"] = cars
+                for stat in stats:
+                    result_gdf.at[result_i,
+                                  stat] = census_gdf.at[start_to_demographic_dict[i], stat]
 
             if record_perf:
                 perf_df.at[result_i, "add_census_time"] = time.time() - s
