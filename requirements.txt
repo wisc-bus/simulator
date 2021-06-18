@@ -1,6 +1,5 @@
 # Graph plotting
 requests
-jupyter
 matplotlib
 pandas
 geopandas
@@ -8,3 +7,4 @@ descartes
 geopy
 boto3
 pyyaml
+docker
