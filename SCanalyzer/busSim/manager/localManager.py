@@ -14,25 +14,25 @@ class LocalManager(BaseManager):
         super().__init__(gtfs_path, borders)
         self.out_path = out_path
 
-    def run_batch(self, busSim_params, start_times, start_points, perf_df=None):
+    def run_batch(self, config, perf_df=None):
+        busSim_params = config.get_busSim_params()
+        start_times = config.get_start_times()
+        start_points = config.get_start_points()
+
         result_df = pd.DataFrame(
             columns=["geometry", "start_time", "map_identifier"])
-        record_perf = (perf_df is not None)
-        start_points_len = len(start_points)
 
         idx = 0
         for start_time in start_times:
-            stop_idx = 0
-
             s = time.time()
             busSim = BusSim(self, busSim_params["day"], start_time, busSim_params["elapse_time"],
                             busSim_params["avg_walking_speed"], busSim_params["max_walking_min"])
             result = SearchResult(busSim, busSim_params["grid_size_min"])
             filename = result.get_out_filename()
-            amortized_init_time = (time.time() - s) / start_points_len
+            amortized_init_time = (time.time() - s) / len(start_points)
 
             # run busSim search on every start_point
-            for start_point in start_points:
+            for stop_idx, start_point in enumerate(start_points):
                 s = time.time()
                 grid = busSim.get_access_grid(
                     start_point=start_point, grid_size_min=busSim_params["grid_size_min"], route_remove=busSim_params["route_remove"])
@@ -45,7 +45,7 @@ class LocalManager(BaseManager):
                 result_df.loc[idx,
                               "map_identifier"] = f"{filename}!{stop_idx}"
 
-                if record_perf:
+                if perf_df:
                     perf_df.loc[idx, "search_time"] = time.time() - \
                         s + amortized_init_time
                     perf_df.loc[idx, "geometry"] = point

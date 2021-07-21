@@ -6,21 +6,44 @@ from zipfile import ZipFile
 import pandas as pd
 from subprocess import check_output
 import boto3
+import docker
+import base64
 
 
 class AWSManager(BaseManager):
-    def __init__(self, gtfs_path, city_path, out_path):
+    ROLE_NAME = 's3rwRole'
+    POLICY_NAME = 's3rwPolicy'
+    FUNCTION_NAME = 'busSim'
+    REPO_BASENAME = "scanalyzer-lambda-handler"
+    PUBLIC_REPOSITORY = 'public.ecr.aws/o8i2z7h9/scanalyzer-lambda-handler'
+    ECR_USERNAME = 'AWS'
+
+    def __init__(self, gtfs_path, out_path, borders):
         self._s3 = boto3.client('s3')
         self._iam = boto3.client("iam")
+        self._ecr = boto3.client('ecr', region_name='ap-northeast-1')
         self._lambda = boto3.client('lambda', region_name='ap-northeast-1')
-        self.bucket_name = self._create_bucket()
-        # self._upload_data(gtfs_path, city_path)
-        self._upload_lambda()
+        # self.bucket_name = self._create_bucket()
+        # # self._upload_data(gtfs_path, city_path)
+        # self._upload_lambda()
 
-    def read_gtfs(self, filename):
+    def run_batch(self, config, perf_df=None):
         pass
+        # if perf_df:
+        #     print("perf in AWS env not supported")
+        # start_times = config.get_start_times()
 
-    def read_city(self):
+        # result_df = pd.DataFrame(
+        #     columns=["geometry", "start_time", "map_identifier"])
+
+        # for start_time in start_times:
+        #     # async call lambda handler
+        #     for stop_idx, start_point in enumerate(start_points):
+        #         # immediatly add "geometry", "start_time", "map_identifier" to result df
+
+        # return result_df
+
+    def read_gtfs(self):
         pass
 
     def save(self, result):
@@ -34,7 +57,7 @@ class AWSManager(BaseManager):
     def _create_bucket(self):
         print("creating s3 bucket")
         account_id = self._get_account_id()
-        bucket_name = f"gtfs-bussim-{account_id}"
+        bucket_name = f"bussim-{account_id}"
 
         self._s3.create_bucket(
             Bucket=bucket_name,
@@ -50,40 +73,16 @@ class AWSManager(BaseManager):
                                 Body=f)
 
     def _upload_lambda(self):
-        # self._upload_lambda_layer()
+        self.roleArn, self.policyArn = self._create_lambda_role()
+        self.repo_uri = self._create_repo()
+        self._upload_image()
         self._upload_lambda_function()
 
-    def _upload_lambda_layer(self):
-        print("packaging lambda layer")
-        self.layerName = "busSim-layer"
-
-        lambda_path = self._get_lambda_path()
-        check_output(["./deploy_layer.sh"], cwd=lambda_path)
-        zip_path = os.path.join(
-            lambda_path, "lambda_layers", "busSim-layer.zip")
-
-        print("deploying lambda layer")
-        with open(zip_path, 'rb') as f:
-            self._lambda.publish_layer_version(
-                LayerName=self.layerName,
-                Description='The layer needed for busSim',
-                Content={
-                    'ZipFile': f.read()
-                },
-                CompatibleRuntimes=[
-                    'python3.8',
-                ]
-            )
-
-    def _upload_lambda_function(self):
-        self.roleName = 's3rwRole'
-        self.policyName = 's3rwPolicy'
-        self.functionName = 'busSim'
-
+    def _create_lambda_role(self):
         # create IAM role
         print("creating IAM role")
         response = self._iam.create_role(
-            RoleName=self.roleName,
+            RoleName=self.ROLE_NAME,
             AssumeRolePolicyDocument=json.dumps({
                 "Version": "2012-10-17",
                 "Statement": [
@@ -97,7 +96,7 @@ class AWSManager(BaseManager):
                 ]
             })
         )
-        self.roleArn = response.get("Role").get("Arn")
+        roleArn = response.get("Role").get("Arn")
 
         # create policy
         policy = {
@@ -118,47 +117,67 @@ class AWSManager(BaseManager):
             ]
         }
         response = self._iam.create_policy(
-            PolicyName=self.policyName,
+            PolicyName=self.POLICY_NAME,
             PolicyDocument=json.dumps(policy)
         )
-        self.policyArn = response.get("Policy").get("Arn")
+        policyArn = response.get("Policy").get("Arn")
 
         # attach policy
         self._iam.attach_role_policy(
-            PolicyArn=self.policyArn,
-            RoleName=self.roleName
+            PolicyArn=policyArn,
+            RoleName=self.ROLE_NAME
         )
 
-        # package function
-        print("packaging lambda function")
-        lambda_path = self._get_lambda_path()
+        return roleArn, policyArn
 
-        tmp = 'tmp.zip'
-        with ZipFile(tmp, 'w') as z:
-            for name in (n for n in os.listdir(lambda_path) if n.split('.')[-1] == 'py'):
-                z.write(os.path.join(lambda_path, name), '/'+name)
+    def _create_repo(self):
+        response = self._ecr.create_repository(
+            repositoryName=self.REPO_BASENAME
+        )
 
+        return response["repository"]["repositoryUri"]
+
+    def _upload_image(self):
+        '''
+        1.Pull Docker image from the offical public ECR repo 
+        2.Push to a private ECR repo (pulic image URI not supported for creating a lambda function)
+        '''
+        print("uploading the image")
+
+        # get ecr credentials
+        ecr_credentials = self._ecr.get_authorization_token()[
+            'authorizationData'][0]
+        ecr_password = (
+            base64.b64decode(ecr_credentials['authorizationToken'])
+            .replace(b'AWS:', b'')
+            .decode('utf-8'))
+        ecr_url = ecr_credentials['proxyEndpoint']
+
+        # pull the image from the offical public ECR repo
+        docker_client = docker.from_env()
+        docker_client.login(
+            username=self.ECR_USERNAME, password=ecr_password, registry=ecr_url)
+        image = docker_client.images.pull(repository=self.PUBLIC_REPOSITORY)
+
+        # push to a private ECR repo
+        image.tag(self.repo_uri, tag='latest')
+        push_log = docker_client.images.push(self.repo_uri, tag='latest')
+
+    def _upload_lambda_function(self):
         print("deploying lambda function")
-        time.sleep(10)
-        with open(tmp, 'rb') as f:
-            response = self._lambda.create_function(
-                Code={
-                    'ZipFile': f.read()
-                },
-                Description='BusSim handler',
-                FunctionName=self.functionName,
-                Handler='lambda_function.lambda_handler',
-                MemorySize=512,
-                Publish=True,
-                Role=self.roleArn,
-                Runtime='python3.8',
-                Timeout=900,
-                TracingConfig={
-                    'Mode': 'Active',
-                },
-            )
-
-        os.remove(tmp)
+        response = self._lambda.create_function(
+            Code={
+                'ImageUri': "public.ecr.aws/o8i2z7h9/scanalyzer-lambda-handler:latest"
+            },
+            PackageType="Image",
+            FunctionName=self.FUNCTION_NAME,
+            MemorySize=512,
+            Role=self.roleArn,
+            Timeout=900,
+            TracingConfig={
+                'Mode': 'Active',
+            },
+        )
 
     def _clean_bucket(self):
         print("cleaning up s3")
@@ -169,7 +188,7 @@ class AWSManager(BaseManager):
     def _clean_lambda(self):
         print("cleaning up lambda")
         self._iam.detach_role_policy(
-            RoleName=self.roleName,
+            RoleName=self.ROLE_NAME,
             PolicyArn=self.policyArn
         )
 
@@ -178,11 +197,16 @@ class AWSManager(BaseManager):
         )
 
         self._iam.delete_role(
-            RoleName=self.roleName
+            RoleName=self.ROLE_NAME
         )
 
         self._lambda.delete_function(
-            FunctionName=self.functionName
+            FunctionName=self.FUNCTION_NAME
+        )
+
+        self._ecr.delete_repository(
+            repositoryName=self.REPO_BASENAME,
+            force=True
         )
 
     def _get_lambda_path(self):

@@ -1,5 +1,5 @@
 from .manager import managerFactory
-from ..util import tomin
+from ..util import tomin, gen_start_time
 from shapely.geometry import Point
 
 
@@ -31,8 +31,10 @@ class Config:
     def get_run_env(self):
         return self.params_.get("run_env")
 
-    def get_interval(self):
-        return self.params_.get("interval")
+    def get_start_times(self):
+        interval = self.params_.get("interval")
+        elapse_time = self.params_.get("busSim_params").get("elapse_time")
+        return gen_start_time(interval, elapse_time)
 
     def get_busSim_params(self):
         return self.params_.get("busSim_params")
