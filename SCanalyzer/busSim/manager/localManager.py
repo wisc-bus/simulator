@@ -21,6 +21,7 @@ class LocalManager(BaseManager):
 
         result_df = pd.DataFrame(
             columns=["geometry", "start_time", "map_identifier"])
+        print(perf_df)
 
         idx = 0
         for start_time in start_times:
@@ -45,7 +46,7 @@ class LocalManager(BaseManager):
                 result_df.loc[idx,
                               "map_identifier"] = f"{filename}!{stop_idx}"
 
-                if perf_df:
+                if perf_df is not None:
                     perf_df.loc[idx, "search_time"] = time.time() - \
                         s + amortized_init_time
                     perf_df.loc[idx, "geometry"] = point
