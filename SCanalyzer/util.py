@@ -24,6 +24,21 @@ def tomin(time_string):
     return h * 60 + m
 
 
+def fsec(seconds):
+    h = seconds // 3600
+    m = (seconds - 3600 * h) // 60
+    s = seconds - 3600 * h - 60 * m
+    return f"{h}:{m}:{s}"
+
+
+def tosec(time_string):
+    time_li = time_string.split(":")
+    h = int(time_li[0])
+    m = int(time_li[1])
+    s = int(time_li[2])
+    return h * 3600 + m * 60 + s
+
+
 def gen_start_time(interval, elapse_time):
     start_times = []
     curr = 0

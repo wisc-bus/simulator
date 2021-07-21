@@ -1,6 +1,7 @@
 from .busSim.manager import managerFactory
 from .result.searchResult import SearchResult
-from .util import transform
+from .util import gen_start_time, transform
+from .gtfs_edit import copy_with_edits
 from .service.yelp import get_results
 from .census import Census
 import numpy as np
@@ -21,9 +22,20 @@ import time
 class SCanalyzer:
     def __init__(self, gtfs_path):
         self.gtfs_path = gtfs_path
+        self.orig_gtfs_path = gtfs_path
         self.base_out_path = self._get_out_path()
         self.out_path = self.base_out_path
         self._preprocess_gtfs()
+
+    def gtfs_edit(self, edit_fn, route, from_orig=True):
+        orig_gtfs_name = os.path.basename(self.orig_gtfs_path)
+        modified_gtfs_name = f"{edit_fn.__name__}-{route}-{orig_gtfs_name}"
+        modified_gtfs_path = os.path.join(
+            self.base_out_path, modified_gtfs_name)
+
+        from_path = self.orig_gtfs_path if from_orig else self.gtfs_path
+        copy_with_edits(from_path, modified_gtfs_path, edit_fn, route)
+        self.gtfs_path = modified_gtfs_path
 
     def set_batch_label(self, label):
         self.out_path = os.path.join(self.base_out_path, label)
@@ -143,6 +155,7 @@ class SCanalyzer:
         return result_gdf
 
     def add_demographic_metrics(self, result_gdf, census_gdf, perf_df=None):
+        stats = census_gdf.columns
         max_x, min_x, max_y, min_y, grid_size, x_num, y_num = self._load_grid_size(
             result_gdf)
         record_perf = (perf_df is not None)
@@ -158,14 +171,11 @@ class SCanalyzer:
                     if census_row["geometry"].contains(row["geometry"]):
                         start_to_demographic_dict[i] = census_i
                         break
-            pop = np.nan
-            cars = np.nan
+
             if not np.isnan(start_to_demographic_dict[i]):
-                pop = census_gdf.at[start_to_demographic_dict[i], "Tot Pop"]
-                cars = census_gdf.at[start_to_demographic_dict[i],
-                                     "cars per capita"]
-            result_gdf.at[result_i, "Tot Pop"] = pop
-            result_gdf.at[result_i, "cars per capita"] = cars
+                for stat in stats:
+                    result_gdf.at[result_i,
+                                  stat] = census_gdf.at[start_to_demographic_dict[i], stat]
 
             if record_perf:
                 perf_df.at[result_i, "add_census_time"] = time.time() - s
