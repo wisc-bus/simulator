@@ -6,23 +6,42 @@ from zipfile import ZipFile
 import pandas as pd
 from subprocess import check_output
 import boto3
+import docker
+import base64
 
 
 class AWSManager(BaseManager):
     ROLE_NAME = 's3rwRole'
     POLICY_NAME = 's3rwPolicy'
     FUNCTION_NAME = 'busSim'
+    REPO_BASENAME = "scanalyzer-lambda-handler"
+    PUBLIC_REPOSITORY = 'public.ecr.aws/o8i2z7h9/scanalyzer-lambda-handler'
+    ECR_USERNAME = 'AWS'
 
-    def __init__(self, gtfs_path, city_path, out_path):
+    def __init__(self, gtfs_path, out_path, borders):
         self._s3 = boto3.client('s3')
         self._iam = boto3.client("iam")
+        self._ecr = boto3.client('ecr', region_name='ap-northeast-1')
         self._lambda = boto3.client('lambda', region_name='ap-northeast-1')
-        self.bucket_name = self._create_bucket()
-        # self._upload_data(gtfs_path, city_path)
-        self._upload_lambda()
+        # self.bucket_name = self._create_bucket()
+        # # self._upload_data(gtfs_path, city_path)
+        # self._upload_lambda()
 
-    def run_batch(self, filename):
+    def run_batch(self, config, perf_df=None):
         pass
+        # if perf_df:
+        #     print("perf in AWS env not supported")
+        # start_times = config.get_start_times()
+
+        # result_df = pd.DataFrame(
+        #     columns=["geometry", "start_time", "map_identifier"])
+
+        # for start_time in start_times:
+        #     # async call lambda handler
+        #     for stop_idx, start_point in enumerate(start_points):
+        #         # immediatly add "geometry", "start_time", "map_identifier" to result df
+
+        # return result_df
 
     def read_gtfs(self):
         pass
@@ -55,6 +74,8 @@ class AWSManager(BaseManager):
 
     def _upload_lambda(self):
         self.roleArn, self.policyArn = self._create_lambda_role()
+        self.repo_uri = self._create_repo()
+        self._upload_image()
         self._upload_lambda_function()
 
     def _create_lambda_role(self):
@@ -109,20 +130,49 @@ class AWSManager(BaseManager):
 
         return roleArn, policyArn
 
+    def _create_repo(self):
+        response = self._ecr.create_repository(
+            repositoryName=self.REPO_BASENAME
+        )
+
+        return response["repository"]["repositoryUri"]
+
+    def _upload_image(self):
+        '''
+        1.Pull Docker image from the offical public ECR repo 
+        2.Push to a private ECR repo (pulic image URI not supported for creating a lambda function)
+        '''
+        print("uploading the image")
+
+        # get ecr credentials
+        ecr_credentials = self._ecr.get_authorization_token()[
+            'authorizationData'][0]
+        ecr_password = (
+            base64.b64decode(ecr_credentials['authorizationToken'])
+            .replace(b'AWS:', b'')
+            .decode('utf-8'))
+        ecr_url = ecr_credentials['proxyEndpoint']
+
+        # pull the image from the offical public ECR repo
+        docker_client = docker.from_env()
+        docker_client.login(
+            username=self.ECR_USERNAME, password=ecr_password, registry=ecr_url)
+        image = docker_client.images.pull(repository=self.PUBLIC_REPOSITORY)
+
+        # push to a private ECR repo
+        image.tag(self.repo_uri, tag='latest')
+        push_log = docker_client.images.push(self.repo_uri, tag='latest')
+
     def _upload_lambda_function(self):
         print("deploying lambda function")
-        time.sleep(10)
         response = self._lambda.create_function(
             Code={
-                'ImageUri': "ECR_PUBLIC_IMAGE"
+                'ImageUri': "public.ecr.aws/o8i2z7h9/scanalyzer-lambda-handler:latest"
             },
-            Description='BusSim handler',
+            PackageType="Image",
             FunctionName=self.FUNCTION_NAME,
-            Handler='lambda_function.lambda_handler',
             MemorySize=512,
-            Publish=True,
             Role=self.roleArn,
-            Runtime='python3.8',
             Timeout=900,
             TracingConfig={
                 'Mode': 'Active',
@@ -152,6 +202,11 @@ class AWSManager(BaseManager):
 
         self._lambda.delete_function(
             FunctionName=self.FUNCTION_NAME
+        )
+
+        self._ecr.delete_repository(
+            repositoryName=self.REPO_BASENAME,
+            force=True
         )
 
     def _get_lambda_path(self):
