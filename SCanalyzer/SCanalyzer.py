@@ -75,7 +75,7 @@ class SCanalyzer:
             return self._csvdf_to_gdf(census_df)
 
         # Create the Geodataframe:
-        c = Census(gtfs_filename="../data/mmt_gtfs/stops.csv")
+        c = Census(self.gtfs_path)
         gdf_tracts = c.getCensusTracts()
         demographic_data = c.getDemographicsData(
             gdf_tracts, demographics=['Race', 'Vehicles'])
