@@ -8,3 +8,4 @@ geopy
 boto3
 pyyaml
 docker
+tqdm
