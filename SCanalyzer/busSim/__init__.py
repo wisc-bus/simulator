@@ -11,14 +11,18 @@ def _init_logger():
     logger = logging.getLogger('app')
     logger.setLevel(logging.DEBUG)
 
-    # init file handler
-    handler = logging.FileHandler(LOG_FILE_PATH)
-    handler.setLevel(logging.WARNING)
+    # log everything to the log file; log WARNING+ to stderr
     formatter = logging.Formatter(
         '%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
 
+    handler = logging.FileHandler(LOG_FILE_PATH, "w")
+    handler.setLevel(logging.DEBUG)
+    handler.setFormatter(formatter)
     logger.addHandler(handler)
 
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.WARNING)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
 _init_logger()
