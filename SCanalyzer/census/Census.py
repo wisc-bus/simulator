@@ -4,20 +4,18 @@ from pyproj import Transformer
 import geopandas as gpd
 import requests
 import json
-
+from zipfile import ZipFile
 
 class Census:
     """
     TODO
     """
 
-    def __init__(self, gtfs_filename):
+    def __init__(self, gtfs_path):
         """
         TODO
         """
-        self.gtfs_file = gtfs_filename
-
-        return
+        self.gtfs_path = gtfs_path
 
     def getDemographicsMap(self):
         """
@@ -26,11 +24,13 @@ class Census:
 
         return self.getCensusTracts()
 
-    def getFarthestPoints(self, filename):
+    def getFarthestPoints(self):
         """
-        TODO
+        returns (N, E, S, W) bounding rectangle of GTFS stops using lat/lon
         """
-        lat_lon_df = pd.read_csv(filename, usecols=['stop_lat', 'stop_lon'])
+        with ZipFile(self.gtfs_path) as zf:
+            with zf.open("stops.txt") as f:
+                lat_lon_df = pd.read_csv(f, usecols=['stop_lat', 'stop_lon'])
 
         # Convert latitude and longitude points to [Shaply] Point objects
         ID_points = [Point(
@@ -69,7 +69,7 @@ class Census:
         TODO
         """
 
-        farthest_points = self.getFarthestPoints(self.gtfs_file)
+        farthest_points = self.getFarthestPoints()
 
         farthest_points_mercader = [self.coordinateTransform(
             point, old_epsg, new_epsg) for point in farthest_points]
@@ -86,7 +86,9 @@ class Census:
         max_sep = round(max_sep, 2)
         max_sep + additionalRadius
 
-        base_url = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Tracts_Blocks/MapServer/11/query?"
+        # TODO: don't hardcode; make sure the geography matches the
+        # one used for the ACS data REST API query
+        base_url = "https://tigerweb.geo.census.gov/arcgis/rest/services/Generalized_ACS2019/Tracts_Blocks/MapServer/4/query?"
         geometry = "geometry=" + \
             str(round(center_lon, 2)) + "%2C" + str(round(center_lat, 2))
         mid_url = "&geometryType=esriGeometryPoint" + \
@@ -100,7 +102,7 @@ class Census:
 
         url = base_url + geometry + mid_url + distance + end_url
 
-        print("Getting geodataframe for tracts from Tigerweb...")
+        print(f"Getting geodataframe for tracts from Tigerweb:\n{url}")
         geodataframe = gpd.read_file(url)
 
         return geodataframe
@@ -137,6 +139,7 @@ class Census:
             demographics = race_list + car_list
             demographics = ','.join(demographics)
 
+            # TODO: better to query by tract
             url_acs = "https://api.census.gov/data/2019/acs/acs5?"
             url_demographic = "get=NAME," + str(demographics) + "&"
             url_location = ("for=block%20group:" + str(blockgroup) + "&in=state:" + str(state) +
@@ -144,7 +147,9 @@ class Census:
             url = url_acs + url_demographic + url_location
 
             resp = requests.get(url)
-            data = json.loads(resp.text)
+            resp.raise_for_status()
+
+            data = resp.json()
 
             if len(combined_data) == 0:
                 combined_data.append(data[0])
