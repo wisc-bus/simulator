@@ -1,6 +1,0 @@
-fare_id,price,currency_type,payment_method,transfers,transfer_duration
-REGULAR,2.50,USD,0,,3600
-PREMIUM,3.25,USD,0,,3600
-FESTIVAL,6.50,USD,0,0,
-SPECIALEVENT,3.00,USD,0,0,
-OZEVENT,6.50,USD,0,0,
