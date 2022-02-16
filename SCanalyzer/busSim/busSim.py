@@ -124,8 +124,7 @@ class BusSim:
         # first convert start_point into meters
         if start_point is not None:
             start_point = transform(start_point[0], start_point[1])
-        stops_radius_list = self.graph.search(
-            start_stop, start_point, route_remove)
+            stops_radius_list = self.graph.search(start_stop, start_point, route_remove)
 
         if stops_radius_list is None or len(stops_radius_list) == 0:
             return
@@ -134,10 +133,10 @@ class BusSim:
         df = pd.DataFrame(stops_radius_list)
 
         gdf = gpd.GeoDataFrame(
-            df, geometry=gpd.points_from_xy(df.stop_x, df.stop_y), crs="EPSG:3174")
+            df, geometry=gpd.points_from_xy(df.stop_x, df.stop_y), crs="EPSG:3174")  # union: meter
 
         self._logger.debug("start generating geometry buffer with radius")
-        gdf['geometry'] = gdf.geometry.buffer(gdf['radius'])
+        gdf['geometry'] = gdf.geometry.buffer(gdf['radius']) # draw bubble with the given radius
         self._logger.info("Finish generating gdf")
         return gdf
 
