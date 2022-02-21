@@ -1,0 +1,2 @@
+feed_publisher_name,feed_publisher_url,feed_lang,feed_start_date,feed_end_date,feed_version
+Capital Area Transportation Authority,http://www.cata.org,en,20211220,20220306,22-01.5 (Dec20-Mar06)_20220131

@@ -124,8 +124,7 @@ class BusSim:
         # first convert start_point into meters
         if start_point is not None:
             start_point = transform(start_point[0], start_point[1])
-        stops_radius_list = self.graph.search(
-            start_stop, start_point, route_remove)
+            stops_radius_list = self.graph.search(start_stop, start_point, route_remove)
 
         if stops_radius_list is None or len(stops_radius_list) == 0:
             return
@@ -134,10 +133,10 @@ class BusSim:
         df = pd.DataFrame(stops_radius_list)
 
         gdf = gpd.GeoDataFrame(
-            df, geometry=gpd.points_from_xy(df.stop_x, df.stop_y), crs="EPSG:3174")
+            df, geometry=gpd.points_from_xy(df.stop_x, df.stop_y), crs="EPSG:3174")  # union: meter
 
         self._logger.debug("start generating geometry buffer with radius")
-        gdf['geometry'] = gdf.geometry.buffer(gdf['radius'])
+        gdf['geometry'] = gdf.geometry.buffer(gdf['radius']) # draw bubble with the given radius
         self._logger.info("Finish generating gdf")
         return gdf
 
@@ -185,8 +184,10 @@ class BusSim:
         # get valid stop_times
         stopTimes_filtered_df = trips_df.merge(
             stopTimes_df, on="trip_id")
+#         stopTimes_merged_df = stopTimes_filtered_df.merge(stops_df, on="stop_id")[
+#             ["service_id", "route_id", "trip_id", "stop_id", "stop_sequence", "arrival_time", "shape_dist_traveled", "stop_x", "stop_y", "cardinal_direction"]]
         stopTimes_merged_df = stopTimes_filtered_df.merge(stops_df, on="stop_id")[
-            ["service_id", "route_short_name", "trip_id", "stop_id", "stop_sequence", "arrival_time", "shape_dist_traveled", "stop_x", "stop_y", "cardinal_direction"]]
+            ["service_id", "route_id", "trip_id", "stop_id", "arrival_time", "stop_sequence", "stop_x", "stop_y"]]
 
         # get stop_times within the time frame
         stopTimes_merged_df['arrival_time'] = pd.to_timedelta(
@@ -207,7 +208,7 @@ class BusSim:
 
     def _is_service_valid(self, day, service_id):
         # FIXME: hardcode in the service to be 95, just pick the first service id
-        return (day == 1) & (service_id.str.startswith("95"))
+        return (day == 1) #& (str(service_id).startswith("95"))
 
     def _get_valid_stopTime(self, df, start_time, elapse_time):
         start_time = pd.to_timedelta(start_time)
