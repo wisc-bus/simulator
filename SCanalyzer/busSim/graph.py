@@ -163,9 +163,7 @@ class Graph:
             map_grid.append(x_list)
 
         for index, row in self.df.iterrows():
-#             node = Node(row["trip_id"], row["route_short_name"], row["stop_sequence"], row["stop_id"], row["stop_x"],
-#                         row["stop_y"], row["arrival_time"], self.max_walking_distance)
-            node = Node(row["trip_id"], row["route_id"], row["stop_sequence"], row["stop_id"], row["stop_x"], # for test
+            node = Node(row["trip_id"], row["route_id"], row["stop_sequence"], row["stop_id"], row["stop_x"],
                         row["stop_y"], row["arrival_time"], self.max_walking_distance)
             self.nodes.append(node)
             trip_node_dict[row["trip_id"]].append(node)
