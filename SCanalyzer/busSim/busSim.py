@@ -189,13 +189,13 @@ class BusSim:
     def _gen_final_df(self, trip_delays):
         self._logger.debug("Start generating dataframe")
 
-        stops_df = self.manager.read_gtfs("stops.txt")
-        for i in range(len(stops_df)):
-            x,y = transform(float(stops_df.iloc[i]['stop_lat']), float(stops_df.iloc[i]['stop_lon']))
-            #print(f"lat = {float(stops_df.iloc[i]['stop_lat'])}, lon = {float(stops_df.iloc[i]['stop_lon'])}")
-            #print(f'x = {x}, y = {y}')
-            stops_df.at[i,'stop_x'] = x
-            stops_df.at[i,'stop_y'] = y
+        stops_df = self.manager.read_gtfs("stops_meter.txt")
+        # for i in range(len(stops_df)):
+        #     x,y = transform(float(stops_df.iloc[i]['stop_lat']), float(stops_df.iloc[i]['stop_lon']))
+        #     #print(f"lat = {float(stops_df.iloc[i]['stop_lat'])}, lon = {float(stops_df.iloc[i]['stop_lon'])}")
+        #     #print(f'x = {x}, y = {y}')
+        #     stops_df.at[i,'stop_x'] = x
+        #     stops_df.at[i,'stop_y'] = y
         print(f'new Stops df {stops_df}')
         trips_df = self.manager.read_gtfs("trips.txt")
         stopTimes_df = self.manager.read_gtfs("stop_times.txt")
@@ -220,7 +220,7 @@ class BusSim:
 #         stopTimes_merged_df = stopTimes_filtered_df.merge(stops_df, on="stop_id")[
 #             ["service_id", "route_short_name", "trip_id", "stop_id", "stop_sequence", "arrival_time", "shape_dist_traveled", "stop_x", "stop_y", "cardinal_direction"]]
         stopTimes_merged_df = stopTimes_filtered_df.merge(stops_df, on="stop_id")[
-            ["service_id", "trip_id", "route_id", "stop_id", "stop_sequence", "arrival_time", "stop_x", "stop_y", "direction_id"]]
+            ["service_id", "trip_id", "route_id", "stop_id", "stop_sequence", "arrival_time", "stop_x", "stop_y"]]
 
         # get stop_times within the time frame
         stopTimes_merged_df['arrival_time'] = pd.to_timedelta(

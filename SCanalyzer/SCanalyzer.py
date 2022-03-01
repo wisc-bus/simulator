@@ -16,8 +16,36 @@ import os
 from pathlib import Path
 from math import ceil, floor
 from collections import defaultdict
-import time
+import time,math
 
+def getZones(lat, lon):
+    if lat >= 72.0 and lat < 84.0:
+        if lon >= 0.0 and lon < 9.0:
+            return 31
+        if lon >= 9.0 and lon < 21.0:
+            return 33
+        if lon >= 21.0 and lon < 33.0:
+            return 35
+        if lon >= 33.0 and lon < 42.0:
+            return 37
+    if lat >= 56 and lat < 64.0 and lon >= 3 and lon <= 12:
+        return 32
+    return math.floor((lon + 180) / 6) + 1
+
+def findEPSG(lat, lon) :
+    zone = getZones(lat, lon)
+    #zone = (math.floor((longitude + 180) / 6) ) + 1  # without special zones for Svalbard and Norway         
+    epsg_code = 32600
+    epsg_code += int(zone)
+    if (lat< 0): # South
+        epsg_code += 100    
+    return epsg_code
+
+def transform(lat, lon):
+    epsg=findEPSG(lat,lon)
+    if _transformer is None:
+        _transformer = Transformer.from_crs(4326, epsg)
+    return _transformer.transform(lat, lon)
 
 class SCanalyzer:
     def __init__(self, gtfs_path):
@@ -201,7 +229,7 @@ class SCanalyzer:
                     df.loc[i, "geometry"] = Polygon(
                         [(x0, y0), (x0, y1), (x1, y1), (x1, y0)])
                     i += 1
-        gdf = gpd.GeoDataFrame(df, crs="EPSG:3174")
+        gdf = gpd.GeoDataFrame(df, crs=self.epsg)
         return gdf
 
     def _get_out_path(self):
@@ -215,29 +243,29 @@ class SCanalyzer:
         self.borders = self._get_borders()
 
     def _reproject_stops(self):
-        with ZipFile(self.gtfs_path) as zf:
-            if "stops-3174.txt" in zf.namelist():
-                return
-            with zf.open("stops.txt") as f:
-                stops_df = pd.read_csv(TextIOWrapper(f), sep=",")
-                transformer = Transformer.from_crs(4326, 3174)
+        with ZipFile(self.gtfs_path, 'a') as zf:
+            stops = None
+            with zf.open('stops.txt') as f:
+                stops = pd.read_csv(TextIOWrapper(f), sep=',')
+                epsg = findEPSG(stops["stop_lat"][0], stops["stop_lon"][0])
+                self.epsg = epsg
+                if 'stops_meter.txt' in zf.namelist():
+                    print('stops_meter exists')
+                    return
+                transformer = Transformer.from_crs(4326, epsg)
                 stop_x, stop_y = transformer.transform(
-                    stops_df["stop_lat"], stops_df["stop_lon"])
-                stops_df["stop_x"] = stop_x
-                stops_df["stop_y"] = stop_y
-                # TODO change this to a fake file wrapper
-                stops_df.to_csv("stops-3174.txt")
-
-        with ZipFile(self.gtfs_path, "a") as zf:
-            zf.write('stops-3174.txt')
-        os.remove('stops-3174.txt')
+                            stops["stop_lat"], stops["stop_lon"])
+                stops["stop_x"] = stop_x
+                stops["stop_y"] = stop_y
+            zf.writestr('stops_meter.txt', data=stops.to_csv(index=False))
+            print('zf namelist', zf.namelist())
 
     def _get_borders(self):
         # TODO: optimize
         # 1. combine with previous _reproject_stops to only open the file once
         # 2. these can be computed within one loop
         with ZipFile(self.gtfs_path) as zf:
-            with zf.open("stops-3174.txt") as f:
+            with zf.open("stops_meter.txt") as f:
                 stops_df = pd.read_csv(TextIOWrapper(f), sep=",")
                 max_x = stops_df["stop_x"].max()
                 min_x = stops_df["stop_x"].min()

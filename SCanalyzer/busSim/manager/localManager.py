@@ -60,6 +60,7 @@ class LocalManager(BaseManager):
 
     def read_gtfs(self, filename):
         with ZipFile(self.gtfs_path) as zf:
+            print(zf.namelist())
             with zf.open(filename) as f:
                 df = pd.read_csv(f, sep=",")
                 return df
