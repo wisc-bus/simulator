@@ -1,5 +1,0 @@
-stop_id,stop_name,stop_lat,stop_lon
-1,Bassett,43.07229,-89.393502
-2,Capitol,43.076846,-89.387014
-3,Laundry,43.082011, -89.379683
-4,Park,43.091397,-89.366304

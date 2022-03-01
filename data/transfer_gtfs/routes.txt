@@ -1,3 +1,0 @@
-route_id,route_short_name,route_type
-80000,80,3
-81000,81,3
