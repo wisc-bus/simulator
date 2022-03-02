@@ -67,10 +67,14 @@ def get_area(start_point=None, start_location=None, busSim=None, crs=3174):
     return bubble.geometry.area
 
 # Charles
+print("check Charles' gtfs")
 get_area(start_location=start_location, busSim=gen_busSim())
 # Tina
+print("check Tina's gtfs")
 get_area(start_location=start_location_2, busSim=gen_busSim(DATA_PATH_2, OUT_PATH, DAY, START_TIME_2, ELAPSE_TIME_2, AVG_WALKING_SPEED, MAX_WALKING_MIN))
 # Young
+print("check Young's gtfs")
 get_area(start_location=start_location, busSim=gen_busSim(DATA_PATH_3, OUT_PATH, DAY, START_TIME_3, ELAPSE_TIME_3, AVG_WALKING_SPEED, MAX_WALKING_MIN))
 # Celia
+print("check Celia's gtfs")
 get_area(start_location=start_location_4, busSim=gen_busSim(DATA_PATH_4, OUT_PATH, DAY, START_TIME_4, ELAPSE_TIME_4, AVG_WALKING_SPEED, MAX_WALKING_MIN))
