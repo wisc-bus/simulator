@@ -196,7 +196,7 @@ class BusSim:
         #     #print(f'x = {x}, y = {y}')
         #     stops_df.at[i,'stop_x'] = x
         #     stops_df.at[i,'stop_y'] = y
-        print(f'new Stops df {stops_df}')
+        # print(f'new Stops df {stops_df}')
         trips_df = self.manager.read_gtfs("trips.txt")
         stopTimes_df = self.manager.read_gtfs("stop_times.txt")
         calendar_df = self.manager.read_gtfs("calendar.txt")
