@@ -41,7 +41,6 @@ START_TIME_4 = "10:00:00"
 ELAPSE_TIME_4 = "02:00:00"
 start_location_4 = "sellery"
 
-
 cache = {}
 def geocode(addr):
     if not "madison" in addr.lower():

@@ -187,7 +187,7 @@ class BusSim:
 #         calendar_filtered_df = calendar_df[self._is_service_valid(
 #             calendar_df[self.day], calendar_df["service_id"])]
         calendar_filtered_df = calendar_df[self._is_day_valid(calendar_df[self.day])]
-        print(calendar_df)
+        # print(calendar_df)
         service_ids = calendar_filtered_df["service_id"].tolist()
 
         # get valid trips

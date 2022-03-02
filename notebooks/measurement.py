@@ -1,10 +1,12 @@
+from datetime import datetime
 from pathlib import Path
 import matplotlib.pyplot as plt
-
+from time import time
 import os, sys
 from geopy.geocoders import GoogleV3, Nominatim
 import geopandas as gpd
 import pandas as pd
+from matplotlib.dates import DateFormatter
 
 DIR = Path('..')
 sys.path.insert(0, str(DIR))
@@ -32,6 +34,10 @@ def get_area(start_point=None, start_location=None, busSim=None, crs=3174):
     return bubble.geometry.area/10**6
 
 def draw_area_times(times,area):
+    times = list(map(lambda x: datetime.strptime(x, "%H:%M:%S"), times))
+    formatter = DateFormatter("%H:%M:%S")
+    plt.gca().xaxis.set_major_formatter(formatter)
+    plt.gcf().autofmt_xdate()
     plt.plot(times, area, label = "line 1")
     plt.xlabel('x - axis')
     plt.ylabel('y - axis')
@@ -41,6 +47,7 @@ def draw_area_times(times,area):
 
 def main():
     # args: measurement.py arg1 arg2 arg3
+    prog_start = time()
     if len(sys.argv) != 6:
         print('invalid args')
         return
@@ -82,14 +89,18 @@ def main():
 
     busSims = []
     for start_time in start_times:
+        print('creat busSim')
         busSims.append(gen_busSim(DATA_PATH,OUT_PATH, DAY, start_time, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN))
 
     areas = []
     for busSim in busSims:
+        print('cal area')
         areas.append(get_area(start_location=START_LOCATION, busSim=busSim, crs=crs))
     
     print(f'{areas=}')
     draw_area_times(start_times, areas)
+    duration = time() - prog_start
+    print(f'time taken {duration}')
     
 
 if __name__ == '__main__':
