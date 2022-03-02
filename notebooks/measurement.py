@@ -23,9 +23,13 @@ def gen_busSim(data_path=None, out_path=None, day=None, start_time=None, elapse_
     return busSim
 
 def get_area(start_point=None, start_location=None, busSim=None, crs=3174):
-    geolocator = Nominatim(user_agent="area_demo")
-    location = geolocator.geocode(start_location)
-    lat, lon = (location.latitude, location.longitude)
+    
+    if start_point != None:
+        lat, lon = start_point
+    else:
+        geolocator = Nominatim(user_agent="area_demo")
+        location = geolocator.geocode(start_location)
+        lat, lon = (location.latitude, location.longitude)
     gdf = busSim.get_gdf(start_point=(lat, lon))
     if gdf is None:
         return 0
@@ -51,38 +55,39 @@ def main():
     if len(sys.argv) != 6:
         print('invalid args')
         return
-    start_times = [ '05:00:00',
-                    '05:15:00',
-                    '05:30:00',
-                    '05:45:00',
-                    '06:00:00',
-                    '06:15:00',
-                    '06:30:00',
-                    '06:45:00',
-                    '07:00:00',
-                    '07:15:00',
-                    '07:30:00',
-                    '07:45:00',
-                    '08:00:00',
-                    '08:15:00',
-                    '08:30:00',
-                    '08:45:00',
-                    '09:00:00',
-                    '09:15:00',
-                    '09:30:00',
-                    '09:45:00',
-                    '10:00:00',
-                    '10:15:00',
-                    '10:30:00',
-                    '10:45:00']
+    start_times = [ '05:00:00',]
+                    #'05:15:00',
+                    # '05:30:00',
+                    # '05:45:00',
+                    # '06:00:00',
+                    # '06:15:00',
+                    # '06:30:00',
+                    # '06:45:00',
+                    # '07:00:00',
+                    # '07:15:00',
+                    # '07:30:00',
+                    # '07:45:00',
+                    # '08:00:00',
+                    # '08:15:00',
+                    # '08:30:00',
+                    # '08:45:00',
+                    # '09:00:00',
+                    # '09:15:00',
+                    # '09:30:00',
+                    # '09:45:00',
+                    # '10:00:00',
+                    # '10:15:00',
+                    # '10:30:00',
+                    # '10:45:00']
     DATA_PATH = "mygtfs.zip" if sys.argv[1] == 'na' else sys.argv[1]
     OUT_PATH = "/tmp/output" if sys.argv[2] == 'na' else sys.argv[2]
     DAY = "monday" if sys.argv[3] == 'na' else sys.argv[3]
     sc = SCanalyzer(DATA_PATH)
     crs = sc.epsg
 
-    # "330 N Orchard St"
-    START_LOCATION = "330 N Orchard St, Madison WI" if sys.argv[4] == 'na' else sys.argv[4]
+    # "330 N Orchard St, Madison WI"
+    START_LOCATION = "Minneapolis Institute of Art, Minneaplolis, MN" if sys.argv[4] == 'na' else sys.argv[4]
+    START_POINT = (44.980342, -93.264989) # minneapolis
     ELAPSE_TIME = "01:50:00" if sys.argv[5] == 'na' else sys.argv[5]
     AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
     MAX_WALKING_MIN = 12
@@ -95,7 +100,7 @@ def main():
     areas = []
     for busSim in busSims:
         print('cal area')
-        areas.append(get_area(start_location=START_LOCATION, busSim=busSim, crs=crs))
+        areas.append(get_area(start_point=START_POINT, start_location=START_LOCATION, busSim=busSim, crs=crs))
     
     print(f'{areas=}')
     draw_area_times(start_times, areas)
