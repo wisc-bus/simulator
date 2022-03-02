@@ -1,6 +1,6 @@
 from .busSim.manager import managerFactory
 from .result.searchResult import SearchResult
-from .util import gen_start_time, transform
+from .util import gen_start_time, transform, findEPSG
 from .gtfs_edit import copy_with_edits
 from .service.yelp import get_results
 from .census import Census
@@ -18,34 +18,6 @@ from math import ceil, floor
 from collections import defaultdict
 import time,math
 
-def getZones(lat, lon):
-    if lat >= 72.0 and lat < 84.0:
-        if lon >= 0.0 and lon < 9.0:
-            return 31
-        if lon >= 9.0 and lon < 21.0:
-            return 33
-        if lon >= 21.0 and lon < 33.0:
-            return 35
-        if lon >= 33.0 and lon < 42.0:
-            return 37
-    if lat >= 56 and lat < 64.0 and lon >= 3 and lon <= 12:
-        return 32
-    return math.floor((lon + 180) / 6) + 1
-
-def findEPSG(lat, lon) :
-    zone = getZones(lat, lon)
-    #zone = (math.floor((longitude + 180) / 6) ) + 1  # without special zones for Svalbard and Norway         
-    epsg_code = 32600
-    epsg_code += int(zone)
-    if (lat< 0): # South
-        epsg_code += 100    
-    return epsg_code
-
-def transform(lat, lon):
-    epsg=findEPSG(lat,lon)
-    if _transformer is None:
-        _transformer = Transformer.from_crs(4326, epsg)
-    return _transformer.transform(lat, lon)
 
 class SCanalyzer:
     def __init__(self, gtfs_path):
