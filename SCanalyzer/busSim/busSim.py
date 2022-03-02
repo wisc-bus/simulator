@@ -2,7 +2,7 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 from .graph import Graph
-from ..util import transform
+from ..util import findEPSG, transform
 import logging
 from math import ceil, floor, sqrt
 import math
@@ -133,28 +133,6 @@ class BusSim:
 
         self._logger.debug("start generating gdf")
         df = pd.DataFrame(stops_radius_list)
-        def getZones(lat, lon):
-            if lat >= 72.0 and lat < 84.0:
-                if lon >= 0.0 and lon < 9.0:
-                    return 31
-                if lon >= 9.0 and lon < 21.0:
-                    return 33
-                if lon >= 21.0 and lon < 33.0:
-                    return 35
-                if lon >= 33.0 and lon < 42.0:
-                    return 37
-            if lat >= 56 and lat < 64.0 and lon >= 3 and lon <= 12:
-                return 32
-            return math.floor((lon + 180) / 6) + 1
-
-        def findEPSG(lat, lon) :
-            zone = getZones(lat, lon)
-            #zone = (math.floor((longitude + 180) / 6) ) + 1  # without special zones for Svalbard and Norway         
-            epsg_code = 32600
-            epsg_code += int(zone)
-            if (lat< 0): # South
-                epsg_code += 100    
-            return epsg_code
 
         epsg=str(findEPSG(start_latlon[0],start_latlon[1]))
         gdf = gpd.GeoDataFrame(
@@ -208,7 +186,8 @@ class BusSim:
             calendar_df['end_date'], format='%Y%m%d')
 #         calendar_filtered_df = calendar_df[self._is_service_valid(
 #             calendar_df[self.day], calendar_df["service_id"])]
-        calendar_filtered_df = calendar_df
+        calendar_filtered_df = calendar_df[self._is_day_valid(calendar_df[self.day])]
+        print(calendar_df)
         service_ids = calendar_filtered_df["service_id"].tolist()
 
         # get valid trips
@@ -239,9 +218,9 @@ class BusSim:
     def get_available_route(self):
         return self.stopTimes_final_df["route_short_name"].unique()
 
-    def _is_service_valid(self, day, service_id):
-        # FIXME: hardcode in the service to be 95, just pick the first service id
-        return (day == 1) #& (str(service_id).startswith("95"))
+    def _is_day_valid(self, day):
+        # return the valid calender in a specific day
+        return (day == 1)
 
     def _get_valid_stopTime(self, df, start_time, elapse_time):
         start_time = pd.to_timedelta(start_time)
