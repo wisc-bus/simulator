@@ -77,6 +77,7 @@ def get_error(path):
     return error
 
 def main():
+    # use argument to detect validity of different city
     # Charles
     print("check Charles' gtfs")
     get_area(start_location=start_location, busSim=gen_busSim())
