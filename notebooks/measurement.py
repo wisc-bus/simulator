@@ -37,7 +37,7 @@ def get_area(start_point=None, start_location=None, busSim=None, crs=3174):
     bubble = flatten(gdf.geometry)
     return bubble.geometry.area/10**6
 
-def draw_area_times(times,area):
+def draw_area_times(times,area, data_path):
     times = list(map(lambda x: datetime.strptime(x, "%H:%M:%S"), times))
     formatter = DateFormatter("%H:%M:%S")
     plt.gca().xaxis.set_major_formatter(formatter)
@@ -47,7 +47,7 @@ def draw_area_times(times,area):
     plt.ylabel('y - axis')
     plt.title('area vs times')
     plt.legend()
-    plt.savefig('graph.png')
+    plt.savefig(data_path+'graph.png')
 
 def main():
     # args: measurement.py arg1 arg2 arg3
@@ -55,30 +55,31 @@ def main():
     if len(sys.argv) != 6:
         print('invalid args')
         return
-    start_times = [ '05:00:00',]
-                    #'05:15:00',
-                    # '05:30:00',
-                    # '05:45:00',
-                    # '06:00:00',
-                    # '06:15:00',
-                    # '06:30:00',
-                    # '06:45:00',
-                    # '07:00:00',
-                    # '07:15:00',
-                    # '07:30:00',
-                    # '07:45:00',
-                    # '08:00:00',
-                    # '08:15:00',
-                    # '08:30:00',
-                    # '08:45:00',
-                    # '09:00:00',
-                    # '09:15:00',
-                    # '09:30:00',
-                    # '09:45:00',
-                    # '10:00:00',
-                    # '10:15:00',
-                    # '10:30:00',
-                    # '10:45:00']
+    start_times = ['05:00:00',
+                    '05:05:00',
+                    '05:10:00',
+                    '05:15:00',
+                    '05:20:00',
+                    '05:25:00',
+                    '05:30:00',
+                    '05:35:00',
+                    '05:40:00',
+                    '05:45:00',
+                    '05:50:00',
+                    '05:55:00',
+                    '06:00:00',
+                    '06:05:00',
+                    '06:10:00',
+                    '06:15:00',
+                    '06:20:00',
+                    '06:25:00',
+                    '06:30:00',
+                    '06:35:00',
+                    '06:40:00',
+                    '06:45:00',
+                    '06:50:00',
+                    '06:55:00',
+                    '07:00:00',]
     DATA_PATH = "mygtfs.zip" if sys.argv[1] == 'na' else sys.argv[1]
     OUT_PATH = "/tmp/output" if sys.argv[2] == 'na' else sys.argv[2]
     DAY = "monday" if sys.argv[3] == 'na' else sys.argv[3]
@@ -86,8 +87,10 @@ def main():
     crs = sc.epsg
 
     # "330 N Orchard St, Madison WI"
-    START_LOCATION = "Minneapolis Institute of Art, Minneaplolis, MN" if sys.argv[4] == 'na' else sys.argv[4]
-    START_POINT = (44.980342, -93.264989) # minneapolis
+    # "Minneapolis Institute of Art, Minneaplolis, MN"
+    START_LOCATION = "330 N Orchard St, Madison WI" if sys.argv[4] == 'na' else sys.argv[4]
+    # START_POINT = (44.980342, -93.264989) # minneapolis
+    START_POINT = None
     ELAPSE_TIME = "01:50:00" if sys.argv[5] == 'na' else sys.argv[5]
     AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
     MAX_WALKING_MIN = 12
@@ -103,7 +106,7 @@ def main():
         areas.append(get_area(start_point=START_POINT, start_location=START_LOCATION, busSim=busSim, crs=crs))
     
     print(f'{areas=}')
-    draw_area_times(start_times, areas)
+    draw_area_times(start_times, areas, DATA_PATH)
     duration = time() - prog_start
     print(f'time taken {duration}')
     
