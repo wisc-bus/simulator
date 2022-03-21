@@ -6,9 +6,11 @@ import pandas as pd
 import geopandas as gpd
 import logging
 
+from time import time
+
 
 class Node:
-    def __init__(self, trip_id, route_short_name, stop_sequence, stop_id, stop_x, stop_y, arrival_time, max_walking_distance):
+    def __init__(self, trip_id, route_short_name, stop_sequence, stop_id, stop_x, stop_y, arrival_time, max_walking_distance, node_id=-1):
         self.trip_id = trip_id
         self.route_short_name = route_short_name
         self.stop_sequence = stop_sequence
@@ -19,6 +21,9 @@ class Node:
         # this should be modified by search in graph
         self.walking_distance = max_walking_distance
         self.children = []
+        self.children_ids = set({})
+        self.id = node_id
+        self.index = -1
 
     def distance(self, other):
         return sqrt((other.stop_x - self.stop_x)**2 + (other.stop_y - self.stop_y)**2)
@@ -77,7 +82,9 @@ class Graph:
         self.avg_walking_speed = avg_walking_speed
         self.nodes = []
         self.empty = False
-        self._constuct_graph()
+        time0 = time()
+        self._constuct_graph() # slow
+        print(f'time cost for construct graph {time()-time0}sec')
 
         self._logger.debug(f"generated {len(self.nodes)} nodes in the graph")
 
@@ -87,17 +94,21 @@ class Graph:
         if self.empty:
             return
 
-        self._logger.debug("start locating starting stop")
-        start = self._find_start(start_stop, start_point)
-        self._logger.debug("start clearing graph")
-        self._clear_graph()
-        self._logger.debug("start runnning dijkstra")
-        self._dijkstra(start, route_remove)
+        self._logger.debug("start locating starting stop") # fast
+        start = self._find_start(start_stop, start_point) # fast
+        self._logger.debug("start clearing graph") # fast
+        self._clear_graph() # fast
+        self._logger.debug("start runnning dijkstra") # fast
+        time0 = time()
 
-        self._logger.debug("start collecting nodes")
-        stops_radius_dict = dict()
-        start_time = pd.to_timedelta(self.start_time)
-        end_time = start_time + pd.to_timedelta(self.elapse_time)
+        self._dijkstra(start, route_remove) 
+        print(f'time cost for dijkstra in graph search {time()- time0}sec')
+
+        self._logger.debug("start collecting nodes") # fast
+        stops_radius_dict = dict() # fast 
+        start_time = pd.to_timedelta(self.start_time) # fast 
+        end_time = start_time + pd.to_timedelta(self.elapse_time) # fast
+        time0 = time()
         for node in self.nodes:
             if node.walking_distance < self.max_walking_distance:
                 radius = self.max_walking_distance - node.walking_distance
@@ -110,6 +121,7 @@ class Graph:
                         "stop_y": node.stop_y,
                         "radius": radius
                     }
+        print(f'time cost for generating radius loop in graph search {time()- time0}sec')
 
         stops_radius_list = [row for row in stops_radius_dict.values()]
         return stops_radius_list
@@ -126,6 +138,10 @@ class Graph:
 
             if curr_distance > curr_node.walking_distance:
                 continue
+            
+            # added by (Charles)
+            if len(curr_node.children) == 0:
+                self._build_walk(curr_node)
 
             for child in curr_node.children:
                 if child.node.route_short_name in route_remove:
@@ -139,7 +155,97 @@ class Graph:
                     child.walking_distance = distance
                     heapq.heappush(pq, (distance, child))
 
+    # new funciton
+    def _build_walk(self, node):
+        index = node.index
+        noLeft = False
+        noRight = False
+        for i in range(len(self.nodes)-index):
+            left_node = self.nodes[index-i] if index>= i and not noLeft else None
+            right_node = self.nodes[index+i] if not noRight else None
+
+            noLeft = True if not left_node or node.stop_x - left_node.stop_x>=self.max_walking_distance else False
+            noRight = True if not right_node or right_node.stop_x - node.stop_x>=self.max_walking_distance else False
+
+            if noLeft and noRight:
+                return
+
+            if not noLeft and left_node.id not in node.children_ids:
+                distance_left = node.distance(left_node)
+                time_delta_left = timedelta(seconds=(distance_left/self.avg_walking_speed))
+                if distance_left < self.max_walking_distance and node.arrival_time+time_delta_left<left_node.arrival_time:
+                    node.children.append(NodeCostPair(left_node, distance_left))
+                    left_node.children.append(NodeCostPair(node,distance_left))
+                    node.children_ids.add(left_node.id)
+                    left_node.children_ids.add(node.id)
+
+            if not noRight and right_node.id not in node.children_ids:
+                distance_right = node.distance(right_node)
+                time_delta_right = timedelta(seconds=(distance_right/self.avg_walking_speed))
+                if distance_right < self.max_walking_distance and node.arrival_time+time_delta_right<right_node.arrival_time:
+                    node.children.append(NodeCostPair(right_node, distance_right))
+                    right_node.children.append(NodeCostPair(node,distance_right))
+                    node.children_ids.add(right_node.id)
+                    right_node.children_ids.add(node.id)
+            
+
+    # new version
     def _constuct_graph(self):
+        if len(self.df) == 0:
+            self.empty = True
+            return
+
+        # gen nodes
+        trip_node_dict = defaultdict(list)
+        stop_node_dict = defaultdict(list)
+
+        for index, row in self.df.iterrows():
+            node = Node(row["trip_id"], row["route_id"], row["stop_sequence"], row["stop_id"], row["stop_x"],
+                        row["stop_y"], row["arrival_time"], self.max_walking_distance, index)
+            self.nodes.append(node)
+            trip_node_dict[row["trip_id"]].append(node)
+            stop_node_dict[row["stop_id"]].append(node)
+
+        # gen edges
+        # direct sequence
+        # forms connection in each trip, with start being the first.
+        for trip_id, nodes in trip_node_dict.items():
+            for i in range(len(nodes)-1):
+                start = nodes[i]
+                end = nodes[i+1]
+                nodeCostPair = NodeCostPair(end, 0)
+                start.children.append(nodeCostPair)
+                start.children_ids.add(end.id)
+
+        # wait on stop: new version (by Charles)
+        time0= time()
+        for stop_id, nodes in stop_node_dict.items():
+            for node in nodes:
+                node.children.extend([NodeCostPair(n, 0) for n in filter(lambda n: n.arrival_time>node.arrival_time, nodes)])
+        print(f'new time for reducted triple for loop {time() - time0}')
+
+        # walk (Charles's version)
+        time0 = time()
+        self.nodes.sort(key=lambda node: node.stop_x)
+        for index, node in enumerate(self.nodes):
+            node.index = index
+        time1 = time()
+        print(f'time for sort nodes {time1-time0}')
+        # for i in range(len(self.nodes)-1):
+        #     start = self.nodes[i]
+        #     for j in range(i+1, len(self.nodes)):
+        #         end = self.nodes[j]
+        #         if end.stop_x - start.stop_x >= self.max_walking_distance:
+        #             break
+        #         distance = start.distance(end)
+        #         time_delta = timedelta(seconds=(distance/self.avg_walking_speed))
+        #         if distance < self.max_walking_distance and start.arrival_time+time_delta<end.arrival_time:
+        #             start.children.append(NodeCostPair(end, distance))
+        #             end.children.append(NodeCostPair(start,distance))
+        #             start.children_ids.add(end.id)
+        # print(f'time for my walk {time()- time1}')
+
+    def _constuct_graph_old(self):
         if len(self.df) == 0:
             self.empty = True
             return
@@ -156,6 +262,8 @@ class Graph:
 
         x_num = ceil((max_x - min_x) / self.max_walking_distance)
         y_num = ceil((max_y - min_y) / self.max_walking_distance)
+
+        # improvement? ok for now
         for i in range(x_num):
             x_list = []
             for j in range(y_num):
@@ -164,10 +272,12 @@ class Graph:
 
         for index, row in self.df.iterrows():
             node = Node(row["trip_id"], row["route_id"], row["stop_sequence"], row["stop_id"], row["stop_x"],
-                        row["stop_y"], row["arrival_time"], self.max_walking_distance)
+                        row["stop_y"], row["arrival_time"], self.max_walking_distance, index)
             self.nodes.append(node)
             trip_node_dict[row["trip_id"]].append(node)
             stop_node_dict[row["stop_id"]].append(node)
+
+            # finding where the node is on the map_grid
             x_bucket = floor((row["stop_x"] - min_x) /
                              self.max_walking_distance)
             y_bucket = floor((row["stop_y"] - min_y) /
@@ -176,14 +286,18 @@ class Graph:
 
         # gen edges
         # direct sequence
+        # forms connection in each trip, with start being the first.
         for trip_id, nodes in trip_node_dict.items():
             for i in range(len(nodes)-1):
                 start = nodes[i]
                 end = nodes[i+1]
                 nodeCostPair = NodeCostPair(end, 0)
                 start.children.append(nodeCostPair)
+                start.children_ids.add(end.id)
 
         # wait on the stop
+        # form connection between same stops which are not the same trip by checking their arrival time
+        time0=time()
         for stop_id, nodes in stop_node_dict.items():
             for i in range(len(nodes)):
                 for j in range(len(nodes)):
@@ -192,12 +306,16 @@ class Graph:
                     if start.arrival_time < end.arrival_time:
                         nodeCostPair = NodeCostPair(end, 0)
                         start.children.append(nodeCostPair)
+                        start.children_ids.add(end.id)
+        print(f'time cost for first origin triple loop {time()-time0}')
 
-        # walk
+        # walk 
+        # add node that are reacheable through walking to its children
         for x in range(x_num):
             for y in range(y_num):
                 start_bucket = map_grid[x][y]
                 end_buckets = []
+                # following should be linear time, since x range and y range is fixed to most at 3
                 for x_end in range(max(0, x-1), min(x_num, x+2)):
                     for y_end in range(max(0, y-1), min(y_num, y+2)):
                         end_buckets.append(map_grid[x_end][y_end])
@@ -215,6 +333,11 @@ class Graph:
                             if distance < self.max_walking_distance and start.arrival_time + time_delta < end.arrival_time:
                                 nodeCostPair = NodeCostPair(end, distance)
                                 start.children.append(nodeCostPair)
+                                start.children_ids.add(end.id)
+
+    def _find_neighbour_nodes(self, start_node, radius):
+        self.nodes = sorted(self.nodes, key=lambda node: node.stop_x)
+
 
     def _find_start(self, start_stop, start_point):
         if start_stop is not None:
@@ -231,8 +354,8 @@ class Graph:
 
     def _find_start_point(self, start_point):
         x, y = start_point
-        start = Node(None, None, None, None, x, y,
-                     pd.to_timedelta(self.start_time), 0)
+        start = Node(trip_id=None, route_short_name=None, stop_sequence=None, stop_id=None, stop_x=x, stop_y=y,
+                     arrival_time=pd.to_timedelta(self.start_time), max_walking_distance=0)
 
         # gen edges by walking
         for end in self.nodes:
@@ -247,5 +370,6 @@ class Graph:
             if distance < self.max_walking_distance and start.arrival_time + time_delta < end.arrival_time:
                 nodeCostPair = NodeCostPair(end, distance)
                 start.children.append(nodeCostPair)
+                start.children_ids.add(end.id)
 
         return start

@@ -141,3 +141,7 @@ lambda/lambda_layers
 
 # out path
 out
+
+# png files
+*.png
+*.csv
