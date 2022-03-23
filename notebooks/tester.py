@@ -80,20 +80,24 @@ def main():
     # use argument to detect validity of different city
     # Charles
     print("check Charles' gtfs")
-    get_area(start_location=start_location, busSim=gen_busSim())
+    area1 = get_area(start_location=start_location, busSim=gen_busSim())
     get_error(DATA_PATH)
+    print(f'{area1=}')
     # Tina
     print("check Tina's gtfs")
-    get_area(start_location=start_location_2, busSim=gen_busSim(DATA_PATH_2, OUT_PATH, DAY, START_TIME_2, ELAPSE_TIME_2, AVG_WALKING_SPEED, MAX_WALKING_MIN))
+    area2 = get_area(start_location=start_location_2, busSim=gen_busSim(DATA_PATH_2, OUT_PATH, DAY, START_TIME_2, ELAPSE_TIME_2, AVG_WALKING_SPEED, MAX_WALKING_MIN))
     get_error(DATA_PATH_2)
+    print(f'{area2=}')
     # Young
     print("check Young's gtfs")
-    get_area(start_location=start_location, busSim=gen_busSim(DATA_PATH_3, OUT_PATH, DAY, START_TIME_3, ELAPSE_TIME_3, AVG_WALKING_SPEED, MAX_WALKING_MIN))
+    area3 = get_area(start_location=start_location, busSim=gen_busSim(DATA_PATH_3, OUT_PATH, DAY, START_TIME_3, ELAPSE_TIME_3, AVG_WALKING_SPEED, MAX_WALKING_MIN))
     get_error(DATA_PATH_3)
+    print(f'{area3=}')
     # Celia
     print("check Celia's gtfs")
-    get_area(start_location=start_location_4,busSim=gen_busSim(DATA_PATH_4,OUT_PATH,DAY, START_TIME_4, ELAPSE_TIME_4, AVG_WALKING_SPEED, MAX_WALKING_MIN))
+    area4 = get_area(start_location=start_location_4,busSim=gen_busSim(DATA_PATH_4,OUT_PATH,DAY, START_TIME_4, ELAPSE_TIME_4, AVG_WALKING_SPEED, MAX_WALKING_MIN))
     get_error(DATA_PATH_4)
+    print(f'{area4=}')
                                    
 
 if __name__ == '__main__':

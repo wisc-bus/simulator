@@ -23,7 +23,6 @@ def gen_busSim(data_path=None, out_path=None, day=None, start_time=None, elapse_
     return busSim
 
 def get_area(start_point=None, start_location=None, busSim=None, crs=3174):
-    
     if start_point != None:
         lat, lon = start_point
     else:

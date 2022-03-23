@@ -231,19 +231,6 @@ class Graph:
             node.index = index
         time1 = time()
         print(f'time for sort nodes {time1-time0}')
-        # for i in range(len(self.nodes)-1):
-        #     start = self.nodes[i]
-        #     for j in range(i+1, len(self.nodes)):
-        #         end = self.nodes[j]
-        #         if end.stop_x - start.stop_x >= self.max_walking_distance:
-        #             break
-        #         distance = start.distance(end)
-        #         time_delta = timedelta(seconds=(distance/self.avg_walking_speed))
-        #         if distance < self.max_walking_distance and start.arrival_time+time_delta<end.arrival_time:
-        #             start.children.append(NodeCostPair(end, distance))
-        #             end.children.append(NodeCostPair(start,distance))
-        #             start.children_ids.add(end.id)
-        # print(f'time for my walk {time()- time1}')
 
     def _constuct_graph_old(self):
         if len(self.df) == 0:
