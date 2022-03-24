@@ -25,7 +25,7 @@ geolocator = Nominatim(user_agent="wisc_bazarr_demo")
 DATA_PATH = "mygtfs.zip"
 # START_TIME = "04:55:00" # cant catch the first bus
 START_TIME = "04:50:00" # can catch the first bus
-ELAPSE_TIME = "00:30:00"
+ELAPSE_TIME = "02:50:00"
 start_location = "330 N Orchard St"
 
 # Tina
@@ -89,9 +89,16 @@ def test1():
     area1 = get_area(start_location=start_location, busSim=busSim1)
     stops_radius_list = get_stops_radius_list(busSim=busSim1)
     err = get_error(DATA_PATH)
-    assert(len(err)!=0)
-    assert(600 - 100 <= max_walking_distance - stops_radius_list[0]['radius'] <= 600 + 100)
-    assert(386 - 100 <= max_walking_distance - stops_radius_list[1]['radius'] <= 386 + 100) # just hard code the first two case
+    assert len(err)!=0, "There's no error for the gtfs."
+    assert 600 - 100 <= max_walking_distance - stops_radius_list[0]['radius'] <= 600 + 100, 'the first node failed'
+    assert 386 - 100 <= max_walking_distance - stops_radius_list[1]['radius'] <= 386 + 100, 'the second node failed'  # just hard code the first two case
+    
+    # test for repeat areas
+    radius_list = list()
+    for radius_dict in stops_radius_list:
+        radius = radius_dict['radius']
+        assert radius not in radius_list, 'Area repeat!'
+        radius_list.append(radius)
 
 def test2():
     pass
