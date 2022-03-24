@@ -130,13 +130,18 @@ class BusSim:
         # first convert start_point into meters
         if start_point is not None:
             start_point = transform(start_point[0], start_point[1])
-            stops_radius_list = self.graph.search(start_stop, start_point, route_remove)
+            self.stops_radius_list = self.graph.search(start_stop, start_point, route_remove)
 
-        if stops_radius_list is None or len(stops_radius_list) == 0:
+        if self.stops_radius_list is None or len(self.stops_radius_list) == 0:
             return
+        
+        print()
+        print(f'{self.stops_radius_list}')
+        print(f'size of the stops radius list: {len(self.stops_radius_list)}')
+        print()
 
         self._logger.debug("start generating gdf")
-        df = pd.DataFrame(stops_radius_list)
+        df = pd.DataFrame(self.stops_radius_list)
 
         epsg=str(findEPSG(start_latlon[0],start_latlon[1]))
         gdf = gpd.GeoDataFrame(

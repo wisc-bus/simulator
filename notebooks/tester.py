@@ -8,6 +8,7 @@ import gtfs_kit as kit
 
 DIR = Path('..')
 sys.path.insert(0, str(DIR))
+from SCanalyzer import busSim
 from SCanalyzer import SCanalyzer
 from SCanalyzer.busSim import BusSim
 from SCanalyzer.busSim.manager import LocalManager
@@ -22,8 +23,9 @@ geolocator = Nominatim(user_agent="wisc_bazarr_demo")
 
 # Charles
 DATA_PATH = "mygtfs.zip"
-START_TIME = "04:55:00"
-ELAPSE_TIME = "01:50:00"
+# START_TIME = "04:55:00" # cant catch the first bus
+START_TIME = "04:50:00" # can catch the first bus
+ELAPSE_TIME = "00:30:00"
 start_location = "330 N Orchard St"
 
 # Tina
@@ -62,10 +64,14 @@ def gen_busSim(data_path=DATA_PATH, out_path=OUT_PATH, day=DAY, start_time=START
 def get_area(start_point=None, start_location=None, busSim=None, crs=3174):
     location = geocode(start_location)
     lat, lon = (location.latitude, location.longitude)
+    print(f'lat, lon: {lat, lon}')
     gdf = busSim.get_gdf(start_point=(lat, lon))
     gdf = gdf.to_crs(epsg=3174)
     bubble = flatten(gdf.geometry)
     return bubble.geometry.area
+
+def get_stops_radius_list(busSim=None):
+    return busSim.stops_radius_list
 
 def get_error(path):
     feed = kit.feed.read_feed(path, dist_units='km')
@@ -78,9 +84,14 @@ def get_error(path):
 
 def test1():
     print("test1: check Charles' gtfs")
-    area1 = get_area(start_location=start_location, busSim=gen_busSim())
+    max_walking_distance = AVG_WALKING_SPEED * MAX_WALKING_MIN * 60 
+    busSim1 = gen_busSim()
+    area1 = get_area(start_location=start_location, busSim=busSim1)
+    stops_radius_list = get_stops_radius_list(busSim=busSim1)
     err = get_error(DATA_PATH)
     assert(len(err)!=0)
+    assert(600 - 100 <= max_walking_distance - stops_radius_list[0]['radius'] <= 600 + 100)
+    assert(386 - 100 <= max_walking_distance - stops_radius_list[1]['radius'] <= 386 + 100) # just hard code the first two case
 
 def test2():
     pass
@@ -90,21 +101,21 @@ def main():
     # Charles
     test1()
     
-    # Tina
-    print("check Tina's gtfs")
-    area2 = get_area(start_location=start_location_2, busSim=gen_busSim(DATA_PATH_2, OUT_PATH, DAY, START_TIME_2, ELAPSE_TIME_2, AVG_WALKING_SPEED, MAX_WALKING_MIN))
-    get_error(DATA_PATH_2)
-    print(f'{area2=}')
-    # Young
-    print("check Young's gtfs")
-    area3 = get_area(start_location=start_location, busSim=gen_busSim(DATA_PATH_3, OUT_PATH, DAY, START_TIME_3, ELAPSE_TIME_3, AVG_WALKING_SPEED, MAX_WALKING_MIN))
-    get_error(DATA_PATH_3)
-    print(f'{area3=}')
-    # Celia
-    print("check Celia's gtfs")
-    area4 = get_area(start_location=start_location_4,busSim=gen_busSim(DATA_PATH_4,OUT_PATH,DAY, START_TIME_4, ELAPSE_TIME_4, AVG_WALKING_SPEED, MAX_WALKING_MIN))
-    get_error(DATA_PATH_4)
-    print(f'{area4=}')
+    # # Tina
+    # print("check Tina's gtfs")
+    # area2 = get_area(start_location=start_location_2, busSim=gen_busSim(DATA_PATH_2, OUT_PATH, DAY, START_TIME_2, ELAPSE_TIME_2, AVG_WALKING_SPEED, MAX_WALKING_MIN))
+    # get_error(DATA_PATH_2)
+    # print(f'{area2=}')
+    # # Young
+    # print("check Young's gtfs")
+    # area3 = get_area(start_location=start_location, busSim=gen_busSim(DATA_PATH_3, OUT_PATH, DAY, START_TIME_3, ELAPSE_TIME_3, AVG_WALKING_SPEED, MAX_WALKING_MIN))
+    # get_error(DATA_PATH_3)
+    # print(f'{area3=}')
+    # # Celia
+    # print("check Celia's gtfs")
+    # area4 = get_area(start_location=start_location_4,busSim=gen_busSim(DATA_PATH_4,OUT_PATH,DAY, START_TIME_4, ELAPSE_TIME_4, AVG_WALKING_SPEED, MAX_WALKING_MIN))
+    # get_error(DATA_PATH_4)
+    # print(f'{area4=}')
                                    
 
 if __name__ == '__main__':
