@@ -58,6 +58,10 @@ class BusSim:
                            elapse_time, self.max_walking_distance, avg_walking_speed)
         self._logger.info("Sim successfully initialized")
 
+    #added by charles
+    def clear_graph(self):
+        self.graph._clear_graph()
+
     def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2, route_remove=[]):
         max_x, min_x, max_y, min_y = self.manager.get_borders()
         x_num, y_num, grid_size = self._get_grid_dimention(grid_size_min)

@@ -76,13 +76,20 @@ def get_error(path):
         print("There's "+str(len(error))+" error for the gtfs.")
     return error
 
+def test1():
+    print("test1: check Charles' gtfs")
+    area1 = get_area(start_location=start_location, busSim=gen_busSim())
+    err = get_error(DATA_PATH)
+    assert(len(err)!=0)
+
+def test2():
+    pass
+
 def main():
     # use argument to detect validity of different city
     # Charles
-    print("check Charles' gtfs")
-    area1 = get_area(start_location=start_location, busSim=gen_busSim())
-    get_error(DATA_PATH)
-    print(f'{area1=}')
+    test1()
+    
     # Tina
     print("check Tina's gtfs")
     area2 = get_area(start_location=start_location_2, busSim=gen_busSim(DATA_PATH_2, OUT_PATH, DAY, START_TIME_2, ELAPSE_TIME_2, AVG_WALKING_SPEED, MAX_WALKING_MIN))

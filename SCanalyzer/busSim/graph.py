@@ -132,6 +132,7 @@ class Graph:
 
     def _dijkstra(self, start, route_remove):
         pq = [(0, start)]
+        builded_walk = set({})
         while len(pq) > 0:
             curr_distance, curr_node = heapq.heappop(pq)
             # print(f"curr_distance: {curr_distance} curr_node: {curr_node}")
@@ -140,8 +141,9 @@ class Graph:
                 continue
             
             # added by (Charles)
-            if len(curr_node.children) == 0:
+            if curr_node.id not in builded_walk:
                 self._build_walk(curr_node)
+                builded_walk.add(curr_node.id)
 
             for child in curr_node.children:
                 if child.node.route_short_name in route_remove:
@@ -157,17 +159,25 @@ class Graph:
 
     # new funciton
     def _build_walk(self, node):
+        # print('build walk begin')
+        time0 = time()
         index = node.index
         noLeft = False
         noRight = False
-        for i in range(len(self.nodes)-index):
+        length = len(self.nodes)
+        range_len = length-index if index<length/2 else index+1 
+        # print(f'node children len {len(node.children)}')
+        for i in range(range_len):
             left_node = self.nodes[index-i] if index>= i and not noLeft else None
-            right_node = self.nodes[index+i] if not noRight else None
+            right_node = self.nodes[index+i] if index<range_len-1 and not noRight else None
 
-            noLeft = True if not left_node or node.stop_x - left_node.stop_x>=self.max_walking_distance else False
-            noRight = True if not right_node or right_node.stop_x - node.stop_x>=self.max_walking_distance else False
+            noLeft = True if left_node==None or node.stop_x - left_node.stop_x>=self.max_walking_distance else False
+            noRight = True if right_node==None or right_node.stop_x - node.stop_x>=self.max_walking_distance else False
 
             if noLeft and noRight:
+                # print(f'building walk cost {time()-time0}')
+                # print('return noleft and noright')
+                # print(f'node children len after {len(node.children)}')
                 return
 
             if not noLeft and left_node.id not in node.children_ids:
@@ -187,6 +197,7 @@ class Graph:
                     right_node.children.append(NodeCostPair(node,distance_right))
                     node.children_ids.add(right_node.id)
                     right_node.children_ids.add(node.id)
+        print(f'building walk cost {time()-time0}')
             
 
     # new version
