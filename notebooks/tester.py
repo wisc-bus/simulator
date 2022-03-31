@@ -1,4 +1,4 @@
-import pytest
+import math
 from pathlib import Path
 import os, sys
 from geopy.geocoders import GoogleV3, Nominatim
@@ -28,23 +28,31 @@ DATA_PATH = "mygtfs.zip"
 START_TIME = "04:50:00" # can catch the first bus
 ELAPSE_TIME = "02:50:00"
 start_location = "330 N Orchard St"
+gdf_1 = None
+busSim_1 = None
 
 # Tina
 DATA_PATH_2 = "../data/transfer_gtfs.zip"
 START_TIME_2 = "12:58:47"
 ELAPSE_TIME_2 = "00:59:00"
 start_location_2 = "The Lux"
+gdf_2 = None
+busSim_2 = None
 
 # Young
 DATA_PATH_3 = "../data/loop_gtfs_young.zip"
 START_TIME_3 = "10:00:00"
 ELAPSE_TIME_3 = "02:00:00"
+gdf_3 = None
+busSim_3 = None
 
 # Celia
 DATA_PATH_4 = "../data/loop_gtfs.zip"
 START_TIME_4 = "10:00:00"
 ELAPSE_TIME_4 = "02:00:00"
 start_location_4 = "sellery"
+gdf_4 = None
+busSim_4 = None
 
 cache = {}
 def geocode(addr):
@@ -62,14 +70,27 @@ def gen_busSim(data_path=DATA_PATH, out_path=OUT_PATH, day=DAY, start_time=START
     busSim = BusSim(manager, day, start_time, elapse_time, avg_walking_speed, max_walking_min)
     return busSim
 
-def get_area(start_point=None, start_location=None, busSim=None, crs=3174):
+# def get_area(start_point=None, start_location=None, busSim=None, crs=3174):
+#     location = geocode(start_location)
+#     lat, lon = (location.latitude, location.longitude)
+#     print(f'lat, lon: {lat, lon}')
+#     gdf = busSim.get_gdf(start_point=(lat, lon))
+#     gdf = gdf.to_crs(epsg=3174)
+#     bubble = flatten(gdf.geometry)
+#     return bubble.geometry.area[0]
+
+def get_route(start_point=None, start_location=None, busSim=None):
     location = geocode(start_location)
     lat, lon = (location.latitude, location.longitude)
     print(f'lat, lon: {lat, lon}')
     gdf = busSim.get_gdf(start_point=(lat, lon))
-    gdf = gdf.to_crs(epsg=3174)
+    return gdf
+
+def get_area(gdf=None, crs=3174):
+    gdf = gdf.to_crs(epsg=crs)
     bubble = flatten(gdf.geometry)
-    return bubble.geometry.area
+    return bubble.geometry.area[0]
+
 
 def get_stops_radius_list(busSim=None):
     return busSim.stops_radius_list
@@ -83,48 +104,92 @@ def get_error(path):
         print("There's "+str(len(error))+" error for the gtfs.")
     return error
 
-def test1():
-    print("test1: check Charles' gtfs")
-    max_walking_distance = AVG_WALKING_SPEED * MAX_WALKING_MIN * 60 
-    busSim1 = gen_busSim()
-    area1 = get_area(start_location=start_location, busSim=busSim1)
-    stops_radius_list = get_stops_radius_list(busSim=busSim1)
+def test_gtfs_errors_for_Charles():
     err = get_error(DATA_PATH)
-    assert len(err)!=0, "There's no error for the gtfs."
-    assert 600 - 100 <= max_walking_distance - stops_radius_list[0]['radius'] <= 600 + 100, 'the first node failed'
-    assert 386 - 100 <= max_walking_distance - stops_radius_list[1]['radius'] <= 386 + 100, 'the second node failed'  # just hard code the first two case
-    
-    # test for repeat areas
-    radius_list = list()
+    assert len(err) == 0, "There're some errors on the gtfs."
+
+def test_route_searching_for_Charles():
+    global gdf_1, busSim_1
+    busSim_1 = gen_busSim()
+    gdf_1 = get_route(start_location=start_location, busSim=busSim_1)
+    assert gdf_1 is not None, 'the route was not found'
+
+# test for upper bound of area
+def test_area_upper_bound_for_Charles():
+    area = get_area(gdf=gdf_1)
+    stops_radius_list = get_stops_radius_list(busSim=busSim_1)
+    square_sum_radius = 0
     for radius_dict in stops_radius_list:
         radius = radius_dict['radius']
-        assert radius not in radius_list, 'Area repeat!'
-        radius_list.append(radius)
+        square_sum_radius += radius ** 2
+    area_upper_bound = math.pi * square_sum_radius
+    assert 0 <= area <= area_upper_bound, 'Area out of range'
 
-def test2():
-    pass
+def test_gtfs_errors_for_Tina():
+    err = get_error(DATA_PATH_2)
+    assert len(err) == 0, "There're some errors on the gtfs."
+
+def test_route_searching_for_Tina():
+    global gdf_2, busSim_2
+    busSim_2 = gen_busSim()
+    gdf_2 = get_route(start_location=start_location, busSim=busSim_2)
+    assert gdf_2 is not None, 'the route was not found'
+
+# test for upper bound of area
+def test_area_upper_bound_for_Tina():
+    area = get_area(gdf=gdf_2)
+    stops_radius_list = get_stops_radius_list(busSim=busSim_2)
+    square_sum_radius = 0
+    for radius_dict in stops_radius_list:
+        radius = radius_dict['radius']
+        square_sum_radius += radius ** 2
+    area_upper_bound = math.pi * square_sum_radius
+    assert 0 <= area <= area_upper_bound, 'Area out of range'
+
+def test_gtfs_errors_for_Young():
+    err = get_error(DATA_PATH_3)
+    assert len(err) == 0, "There're some errors on the gtfs."
+
+def test_route_searching_for_Young():
+    global gdf_3, busSim_3
+    busSim_3 = gen_busSim()
+    gdf_3 = get_route(start_location=start_location, busSim=busSim_3)
+    assert gdf_3 is not None, 'the route was not found'
+
+# test for upper bound of area
+def test_area_upper_bound_for_Young():
+    area = get_area(gdf=gdf_3)
+    stops_radius_list = get_stops_radius_list(busSim=busSim_3)
+    square_sum_radius = 0
+    for radius_dict in stops_radius_list:
+        radius = radius_dict['radius']
+        square_sum_radius += radius ** 2
+    area_upper_bound = math.pi * square_sum_radius
+    assert 0 <= area <= area_upper_bound, 'Area out of range'
+
+def test_gtfs_errors_for_Celia():
+    err = get_error(DATA_PATH_4)
+    assert len(err) == 0, "There're some errors on the gtfs."
+    assert gdf_4 is not None, 'the route was not found'
+
+def test_route_searching_for_Celia():
+    global gdf_4, busSim_4
+    busSim_4 = gen_busSim()
+    gdf_4 = get_route(start_location=start_location, busSim=busSim_4)
+
+# test for upper bound of area
+def test_area_upper_bound_for_Celia():
+    area = get_area(gdf=gdf_4)
+    stops_radius_list = get_stops_radius_list(busSim=busSim_4)
+    square_sum_radius = 0
+    for radius_dict in stops_radius_list:
+        radius = radius_dict['radius']
+        square_sum_radius += radius ** 2
+    area_upper_bound = math.pi * square_sum_radius
+    assert 0 <= area <= area_upper_bound, 'Area out of range'
 
 def main():
-    # use argument to detect validity of different city
-    # Charles
-    test1()
-    
-    # # Tina
-    # print("check Tina's gtfs")
-    # area2 = get_area(start_location=start_location_2, busSim=gen_busSim(DATA_PATH_2, OUT_PATH, DAY, START_TIME_2, ELAPSE_TIME_2, AVG_WALKING_SPEED, MAX_WALKING_MIN))
-    # get_error(DATA_PATH_2)
-    # print(f'{area2=}')
-    # # Young
-    # print("check Young's gtfs")
-    # area3 = get_area(start_location=start_location, busSim=gen_busSim(DATA_PATH_3, OUT_PATH, DAY, START_TIME_3, ELAPSE_TIME_3, AVG_WALKING_SPEED, MAX_WALKING_MIN))
-    # get_error(DATA_PATH_3)
-    # print(f'{area3=}')
-    # # Celia
-    # print("check Celia's gtfs")
-    # area4 = get_area(start_location=start_location_4,busSim=gen_busSim(DATA_PATH_4,OUT_PATH,DAY, START_TIME_4, ELAPSE_TIME_4, AVG_WALKING_SPEED, MAX_WALKING_MIN))
-    # get_error(DATA_PATH_4)
-    # print(f'{area4=}')
-                                   
+    pass                      
 
 if __name__ == '__main__':
     main()

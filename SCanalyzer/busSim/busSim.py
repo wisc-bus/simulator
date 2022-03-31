@@ -134,11 +134,6 @@ class BusSim:
 
         if self.stops_radius_list is None or len(self.stops_radius_list) == 0:
             return
-        
-        print()
-        print(f'{self.stops_radius_list}')
-        print(f'size of the stops radius list: {len(self.stops_radius_list)}')
-        print()
 
         self._logger.debug("start generating gdf")
         df = pd.DataFrame(self.stops_radius_list)

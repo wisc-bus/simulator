@@ -110,16 +110,10 @@ class Graph:
         end_time = start_time + pd.to_timedelta(self.elapse_time) # fast
         time0 = time()
         for node in self.nodes:
-            print()
-            print(f'{node.stop_id=}')
-            print(f'node.walking_distance:\n{node.walking_distance}')
-            print(f'self.max_walking_distance:\n{self.max_walking_distance}')
             # walking_distance = the distance between the prev node to current node
             if node.walking_distance < self.max_walking_distance:
                 radius = self.max_walking_distance - node.walking_distance
                 time_left = (end_time - node.arrival_time).total_seconds()
-                print(end_time - node.arrival_time)
-                print(f'{time_left=}')
                 # min(remaining walking distance based on maximum distance, remaining walking distance based on time left)
                 radius = min(radius, self.avg_walking_speed * time_left)
                 if node.stop_id not in stops_radius_dict or radius > stops_radius_dict[node.stop_id]["radius"]:
@@ -254,6 +248,7 @@ class Graph:
         time1 = time()
         print(f'time for sort nodes {time1-time0}')
 
+    # OLDversion
     def _constuct_graph_old(self):
         if len(self.df) == 0:
             self.empty = True

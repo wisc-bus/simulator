@@ -7,6 +7,7 @@ from geopy.geocoders import GoogleV3, Nominatim
 import geopandas as gpd
 import pandas as pd
 import matplotlib.dates as mdates
+import json
 
 DIR = Path('..')
 sys.path.insert(0, str(DIR))
@@ -24,16 +25,16 @@ def gen_busSim(data_path=None, out_path=None, day=None, start_time=None, elapse_
 
 def get_area(start_points=[], start_locations=[], busSim=None, crs=3174):
     if len(start_points)==0:
-        geolocator = Nominatim(user_agent="area_demo")
+        geolocator = Nominatim(user_agent="user_test")
         for loc in start_locations:
             location = geolocator.geocode(loc)
             start_point = (location.latitude, location.longitude)
             start_points.append(start_point)
     
     area_dict = {}
-    print(f'{start_points=}')
+    # print(f'{start_points=}')
     for index, start in enumerate(start_points):
-        print(f'{start=}')
+        # print(f'{start=}')
         gdf = busSim.get_gdf(start_point=start)
         busSim.clear_graph()
         if gdf is None:
@@ -42,7 +43,7 @@ def get_area(start_points=[], start_locations=[], busSim=None, crs=3174):
         gdf = gdf.to_crs(epsg=3174)
         bubble = flatten(gdf.geometry)
         area_dict[f'{start_locations[index]}'] = bubble.geometry.area/10**6
-    print(f'{area_dict=}')
+    # print(f'{area_dict=}')
     return area_dict
 
 def draw_area_times(times, areas, data_path):
@@ -61,51 +62,8 @@ def draw_area_times(times, areas, data_path):
     plt.legend()
     plt.savefig(data_path+'graph2.png')
 
-def main():
-    # args: measurement.py arg1 arg2 arg3
+def run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs):
     prog_start = time()
-    if len(sys.argv) != 6:
-        print('invalid args')
-        return
-    # start_times = [ '05:00:00',
-    #                 '06:00:00',
-    #                 '07:00:00',
-    #                 '08:00:00',
-    #                 '09:00:00',
-    #                 '10:00:00',
-    #                 '11:00:00',
-    #                 '12:00:00',
-    #                 '13:00:00',
-    #                 '14:00:00',
-    #                 '15:00:00',
-    #                 '16:00:00',
-    #                 '17:00:00',
-    #                 '18:00:00',
-    #                 '19:00:00',
-    #                 '20:00:00',
-    #                 '21:00:00',
-    #                 '22:00:00',
-    #                 '23:00:00',]
-
-    start_times = []
-    for day in ["monday", "tuesday"]:
-        for start_time in range(5,24,4):
-            start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))
-    DATA_PATH = "../data/mmt_gtfs.zip" if sys.argv[1] == 'na' else sys.argv[1]
-    OUT_PATH = "/tmp/output" if sys.argv[2] == 'na' else sys.argv[2]
-    DAY = "monday" if sys.argv[3] == 'na' else sys.argv[3]
-    sc = SCanalyzer(DATA_PATH)
-    crs = sc.epsg
-
-    # "330 N Orchard St, Madison WI"
-    # "Minneapolis Institute of Art, Minneaplolis, MN"
-    START_LOCATIONS = ["330 N Orchard St, Madison WI", "The Nat, Madison WI", "Olbrich Gardens, Madison WI"] if sys.argv[4] == 'na' else sys.argv[4]
-    # START_POINT = (44.980342, -93.264989) # minneapolis
-    START_POINTS = []
-    ELAPSE_TIME = "00:30:00" if sys.argv[5] == 'na' else sys.argv[5]
-    AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
-    MAX_WALKING_MIN = 12
-
     areas = {}
     for start_time in start_times:
         print('creat busSim')
@@ -118,7 +76,7 @@ def main():
             else:
                 areas[key].append(area)
          
-    print(f'{areas=}')
+    # print(f'{areas=}')
     pre_day = ''
     day_index = 0
     for index in range(len(start_times)):
@@ -128,11 +86,53 @@ def main():
             pre_day = day
         start_times[index] = f"{start_times[index]}  {day_index}"
         
-    print(start_times)
+    # print(start_times)
     draw_area_times(start_times, areas, DATA_PATH)
     duration = time() - prog_start
     print(f'time taken {duration}')
+    return duration
     
+
+def main():
+    if len(sys.argv) != 6:
+        print(sys.argv)
+        print('invalid args')
+        return
+    START_POINTS = []
+    ELAPSE_TIME = "01:30:00" if sys.argv[5] == 'na' else sys.argv[5]
+    AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
+    MAX_WALKING_MIN = 12
+    
+    DATA_PATH = "../data/mmt_gtfs.zip" if sys.argv[1] == 'na' else sys.argv[1]
+    OUT_PATH = "/tmp/output" if sys.argv[2] == 'na' else sys.argv[2]
+    DAY = "monday" if sys.argv[3] == 'na' else sys.argv[3]
+    sc = SCanalyzer(DATA_PATH)
+    crs = sc.epsg
+    START_LOCATIONS = ["330 N Orchard St, Madison WI", "The Nat, Madison WI", "Olbrich Gardens, Madison WI"] if sys.argv[4] == 'na' else [sys.argv[4]]
+
+    runs = []
+    start_times = []
+    for day in ["monday"]:
+        for start_time in range(5,24,6):
+            start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
+    runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
+
+    start_times = []
+    for day in ["monday"]:
+        for start_time in range(5,24,4):
+            start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
+    runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
+
+    start_times = []
+    for day in ["monday"]:
+        for start_time in range(5,24,2):
+            start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
+    runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
+    
+    with open("new_version2.json", "w") as f:
+        json.dump(runs, f)
+
+
 
 if __name__ == '__main__':
     main()
