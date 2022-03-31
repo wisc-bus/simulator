@@ -21,7 +21,7 @@ class Node:
         # this should be modified by search in graph
         self.walking_distance = max_walking_distance
         self.children = []
-        self.children_ids = set({})
+        self.children_ids = set()
         self.id = node_id
         self.index = -1
 
@@ -110,9 +110,17 @@ class Graph:
         end_time = start_time + pd.to_timedelta(self.elapse_time) # fast
         time0 = time()
         for node in self.nodes:
+            print()
+            print(f'{node.stop_id=}')
+            print(f'node.walking_distance:\n{node.walking_distance}')
+            print(f'self.max_walking_distance:\n{self.max_walking_distance}')
+            # walking_distance = the distance between the prev node to current node
             if node.walking_distance < self.max_walking_distance:
                 radius = self.max_walking_distance - node.walking_distance
                 time_left = (end_time - node.arrival_time).total_seconds()
+                print(end_time - node.arrival_time)
+                print(f'{time_left=}')
+                # min(remaining walking distance based on maximum distance, remaining walking distance based on time left)
                 radius = min(radius, self.avg_walking_speed * time_left)
                 if node.stop_id not in stops_radius_dict or radius > stops_radius_dict[node.stop_id]["radius"]:
                     stops_radius_dict[node.stop_id] = {
@@ -132,11 +140,13 @@ class Graph:
 
     def _dijkstra(self, start, route_remove):
         pq = [(0, start)]
-        builded_walk = set({})
+        builded_walk = set()
         while len(pq) > 0:
             curr_distance, curr_node = heapq.heappop(pq)
             # print(f"curr_distance: {curr_distance} curr_node: {curr_node}")
 
+            # curr_node.walking_distance has only two cases: unchanged or smaller, because it only updates when getting smaller
+            # curr_distance can be regarded as the previous value of curr_node.walking_distance
             if curr_distance > curr_node.walking_distance:
                 continue
             
@@ -148,13 +158,14 @@ class Graph:
             for child in curr_node.children:
                 if child.node.route_short_name in route_remove:
                     continue
-                cost = child.cost
+                cost = child.cost # The distance between current node and parent node
                 child = child.node
 
                 distance = curr_distance + cost
 
                 if distance < child.walking_distance:
                     child.walking_distance = distance
+                    # if the current distance is shorter, we need to update all child nodes after the current node
                     heapq.heappush(pq, (distance, child))
 
     # new funciton
