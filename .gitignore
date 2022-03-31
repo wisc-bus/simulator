@@ -143,5 +143,4 @@ lambda/lambda_layers
 out
 
 # png files
-*.png
 *.csv

@@ -145,9 +145,9 @@ class Graph:
                 continue
             
             # added by (Charles)
-            if curr_node.id not in builded_walk:
-                self._build_walk(curr_node)
-                builded_walk.add(curr_node.id)
+            # if curr_node.id not in builded_walk:
+            #     self._build_walk(curr_node)
+            #     builded_walk.add(curr_node.id)
 
             for child in curr_node.children:
                 if child.node.route_short_name in route_remove:
@@ -206,7 +206,7 @@ class Graph:
             
 
     # new version
-    def _constuct_graph(self):
+    def _constuct_graph_new(self):
         if len(self.df) == 0:
             self.empty = True
             return
@@ -249,7 +249,7 @@ class Graph:
         print(f'time for sort nodes {time1-time0}')
 
     # OLDversion
-    def _constuct_graph_old(self):
+    def _constuct_graph(self):
         if len(self.df) == 0:
             self.empty = True
             return
