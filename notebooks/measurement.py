@@ -45,19 +45,6 @@ def get_area(start_points=[], start_locations=[], busSim=None, crs=3174):
     print(f'{area_dict=}')
     return area_dict
 
-# def get_area(start_point=None, start_location=None, busSim=None, crs=3174):
-#     if start_point != None:
-#         lat, lon = start_point
-#     else:
-#         geolocator = Nominatim(user_agent="area_demo")
-#         location = geolocator.geocode(start_location)
-#         lat, lon = (location.latitude, location.longitude)
-#     gdf = busSim.get_gdf(start_point=(lat, lon))
-#     if gdf is None:
-#         return 0
-#     gdf = gdf.to_crs(epsg=3174)
-#     bubble = flatten(gdf.geometry)
-#     return bubble.geometry.area/10**6
 def draw_area_times(times, areas, data_path):
     fig, ax = plt.subplots(figsize=(12,8)) 
     times = list(map(lambda x: datetime.strptime(x.capitalize(), "%A %H:%M:%S  %d"), times))
@@ -73,25 +60,6 @@ def draw_area_times(times, areas, data_path):
     plt.title('area vs times')
     plt.legend()
     plt.savefig(data_path+'graph2.png')
-
-
-
-# times: list of tiem
-# areas: {'start1':[point1, point2, point....], 'start2':[point1, point2, point....]}
-# def draw_area_times(times,areas, data_path):
-#     # print(f'{times}, {len(times)}')
-#     # print(f'{areas=}, {len(areas)}')
-#     times = list(map(lambda x: datetime.strptime(x.capitalize(), "%A %H:%M:%S  %d"), times))
-#     print(f'{times=}')
-#     formatter = mdates.DateFormatter("%a %H:%M")
-#     plt.gca().xaxis.set_major_formatter(formatter)
-#     plt.gcf().autofmt_xdate()
-#     plt.plot(times, areas, label = "line 1")
-#     plt.xlabel('x - axis')
-#     plt.ylabel('y - axis')
-#     plt.title('area vs times')
-#     plt.legend()
-#     plt.savefig(data_path+'graph.png')
 
 def main():
     # args: measurement.py arg1 arg2 arg3

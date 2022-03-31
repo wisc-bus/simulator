@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 import os, sys
 from geopy.geocoders import GoogleV3, Nominatim
