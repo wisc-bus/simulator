@@ -140,7 +140,7 @@ class Graph:
 
     def _dijkstra(self, start, route_remove):
         pq = [(0, start)]
-        builded_walk = set({})
+        builded_walk = set()
         while len(pq) > 0:
             curr_distance, curr_node = heapq.heappop(pq)
             # print(f"curr_distance: {curr_distance} curr_node: {curr_node}")
