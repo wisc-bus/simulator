@@ -104,9 +104,9 @@ def get_error(path):
         print("There's "+str(len(error))+" error for the gtfs.")
     return error
 
-def test_gtfs_errors_for_Charles():
-    err = get_error(DATA_PATH)
-    assert len(err) == 0, "There're some errors on the gtfs."
+# def test_gtfs_errors_for_Charles():
+#     err = get_error(DATA_PATH)
+#     assert len(err) == 0, "There're some errors on the gtfs."
 
 def test_route_searching_for_Charles():
     global gdf_1, busSim_1
@@ -125,9 +125,9 @@ def test_area_upper_bound_for_Charles():
     area_upper_bound = math.pi * square_sum_radius
     assert 0 <= area <= area_upper_bound, 'Area out of range'
 
-def test_gtfs_errors_for_Tina():
-    err = get_error(DATA_PATH_2)
-    assert len(err) == 0, "There're some errors on the gtfs."
+# def test_gtfs_errors_for_Tina():
+#     err = get_error(DATA_PATH_2)
+#     assert len(err) == 0, "There're some errors on the gtfs."
 
 def test_route_searching_for_Tina():
     global gdf_2, busSim_2
@@ -146,9 +146,9 @@ def test_area_upper_bound_for_Tina():
     area_upper_bound = math.pi * square_sum_radius
     assert 0 <= area <= area_upper_bound, 'Area out of range'
 
-def test_gtfs_errors_for_Young():
-    err = get_error(DATA_PATH_3)
-    assert len(err) == 0, "There're some errors on the gtfs."
+# def test_gtfs_errors_for_Young():
+#     err = get_error(DATA_PATH_3)
+#     assert len(err) == 0, "There're some errors on the gtfs."
 
 def test_route_searching_for_Young():
     global gdf_3, busSim_3
@@ -167,10 +167,10 @@ def test_area_upper_bound_for_Young():
     area_upper_bound = math.pi * square_sum_radius
     assert 0 <= area <= area_upper_bound, 'Area out of range'
 
-def test_gtfs_errors_for_Celia():
-    err = get_error(DATA_PATH_4)
-    assert len(err) == 0, "There're some errors on the gtfs."
-    assert gdf_4 is not None, 'the route was not found'
+# def test_gtfs_errors_for_Celia():
+#     err = get_error(DATA_PATH_4)
+#     assert len(err) == 0, "There're some errors on the gtfs."
+#     assert gdf_4 is not None, 'the route was not found'
 
 def test_route_searching_for_Celia():
     global gdf_4, busSim_4
@@ -187,6 +187,24 @@ def test_area_upper_bound_for_Celia():
         square_sum_radius += radius ** 2
     area_upper_bound = math.pi * square_sum_radius
     assert 0 <= area <= area_upper_bound, 'Area out of range'
+
+def test_small_area_madison():
+    START_POINTS = []
+    ELAPSE_TIME = "01:30:00"
+    AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
+    MAX_WALKING_MIN = 12
+    
+    DATA_PATH = "../data/mmt_gtfs.zip"
+    OUT_PATH = "/tmp/output" 
+    DAY = "monday"
+    sc = SCanalyzer(DATA_PATH)
+    crs = sc.epsg
+    START_LOCATION = "The Nat, Madison WI"
+
+    busSim = gen_busSim(DATA_PATH, OUT_PATH, DAY, "05:00:00", ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN)
+    area = get_area(gdf=get_route(start_location=START_LOCATION, busSim=busSim))
+
+    assert area < 2* 10**6
 
 def main():
     pass                      

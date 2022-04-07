@@ -53,8 +53,10 @@ def draw_area_times(times, areas, data_path):
     plt.gca().xaxis.set_major_formatter(formatter)
     plt.gcf().autofmt_xdate()
     
-    for x in areas.keys():
-        ax.plot(times, areas[x], label = x)
+    for key in areas.keys():
+        print(f'loc {key}')
+        print(f'{times=}, {areas[key]=}')
+        ax.plot(times, areas[key], label = key)
     
     plt.xlabel('times')
     plt.ylabel('area')
@@ -66,10 +68,10 @@ def run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WA
     prog_start = time()
     areas = {}
     for start_time in start_times:
-        print('creat busSim')
+        # print('creat busSim')
         day, start = start_time.split(' ')
         busSim = gen_busSim(DATA_PATH,OUT_PATH, day, start, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN)
-        print('cal area')
+        # print('cal area')
         for key, area in get_area(start_points=START_POINTS, start_locations=START_LOCATIONS, busSim=busSim, crs=crs).items():
             if key not in areas:
                 areas[key] = [area]
@@ -119,8 +121,8 @@ def main():
     # runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
 
     # start_times = []
-    for day in ["monday", "tuesday", "wednesday"]:
-        for start_time in range(5,24,2):
+    for day in ["monday", "tuesday"]:
+        for start_time in range(5,24,4):
             start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
     runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
     
