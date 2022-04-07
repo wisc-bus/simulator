@@ -90,7 +90,7 @@ class SCanalyzer:
         if cache and os.path.exists(cache_path):
             return pd.read_csv(cache_path)
 
-        dfs = [get_results(api_key, service, self.borders)
+        dfs = [get_results(api_key, service, self.borders, self.epsg)
                for service in services]
         df = pd.concat(dfs)
         df.to_csv(cache_path, index=False)

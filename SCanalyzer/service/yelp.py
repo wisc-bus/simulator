@@ -4,23 +4,23 @@ import geopandas as gpd
 from pyproj import Transformer
 
 
-def get_search_point(borders):
+def get_search_point(borders, epsg):
     max_x, min_x, max_y, min_y = borders
     # TODO: this might miss some locations, use diagonal
     radius = int(max(max_x - min_x, max_y - min_y) / 2)
     centroid_x = (max_x + min_x) / 2
     centroid_y = (max_y + min_y) / 2
-    transformer = Transformer.from_crs(3174, 4326)
+    transformer = Transformer.from_crs(epsg, 4326)
     centroid_lat, centroid_lon = transformer.transform(centroid_x, centroid_y)
     return radius, centroid_lat, centroid_lon
 
 
-def get_results(api_key, service, borders):
+def get_results(api_key, service, borders, epgs):
     limit = 50
     endpoint = 'https://api.yelp.com/v3/businesses/search'
     headers = {'Authorization': 'bearer %s' % api_key}
 
-    radius, centroid_lat, centroid_lon = get_search_point(borders)
+    radius, centroid_lat, centroid_lon = get_search_point(borders, epgs)
     # print(radius, centroid_lat, centroid_lon)
     parameters = {
         'term': service,
