@@ -75,7 +75,6 @@ def run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WA
                 areas[key] = [area]
             else:
                 areas[key].append(area)
-         
     # print(f'{areas=}')
     pre_day = ''
     day_index = 0
@@ -94,43 +93,39 @@ def run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WA
     
 
 def main():
-    if len(sys.argv) != 6:
-        print(sys.argv)
-        print('invalid args')
-        return
     START_POINTS = []
-    ELAPSE_TIME = "01:30:00" if sys.argv[5] == 'na' else sys.argv[5]
+    ELAPSE_TIME = "01:30:00"
     AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
     MAX_WALKING_MIN = 12
     
-    DATA_PATH = "../data/mmt_gtfs.zip" if sys.argv[1] == 'na' else sys.argv[1]
-    OUT_PATH = "/tmp/output" if sys.argv[2] == 'na' else sys.argv[2]
-    DAY = "monday" if sys.argv[3] == 'na' else sys.argv[3]
+    DATA_PATH = "../data/mmt_gtfs.zip"
+    OUT_PATH = "/tmp/output" 
+    DAY = "monday"
     sc = SCanalyzer(DATA_PATH)
     crs = sc.epsg
-    START_LOCATIONS = ["330 N Orchard St, Madison WI", "The Nat, Madison WI", "Olbrich Gardens, Madison WI"] if sys.argv[4] == 'na' else [sys.argv[4]]
+    START_LOCATIONS = ["330 N Orchard St, Madison WI", "The Nat, Madison WI", "Olbrich Gardens, Madison WI"]
 
     runs = []
     start_times = []
-    for day in ["monday"]:
-        for start_time in range(5,24,6):
-            start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
-    runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
+    # for day in ["monday"]:
+    #     for start_time in range(5,24,6):
+    #         start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
+    # runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
 
-    start_times = []
-    for day in ["monday"]:
-        for start_time in range(5,24,4):
-            start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
-    runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
+    # start_times = []
+    # for day in ["monday"]:
+    #     for start_time in range(5,24,4):
+    #         start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
+    # runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
 
-    start_times = []
-    for day in ["monday"]:
+    # start_times = []
+    for day in ["monday", "tuesday", "wednesday"]:
         for start_time in range(5,24,2):
             start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
     runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
     
-    with open("new_version2.json", "w") as f:
-        json.dump(runs, f)
+    # with open("new_version2.json", "w") as f:
+    #     json.dump(runs, f)
 
 
 

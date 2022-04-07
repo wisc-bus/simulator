@@ -84,7 +84,7 @@ class Graph:
         self.empty = False
         time0 = time()
         self._constuct_graph() # slow
-        print(f'time cost for construct graph {time()-time0}sec')
+        # print(f'time cost for construct graph {time()-time0}sec')
 
         self._logger.debug(f"generated {len(self.nodes)} nodes in the graph")
 
@@ -102,7 +102,7 @@ class Graph:
         time0 = time()
 
         self._dijkstra(start, route_remove) 
-        print(f'time cost for dijkstra in graph search {time()- time0}sec')
+        # print(f'time cost for dijkstra in graph search {time()- time0}sec')
 
         self._logger.debug("start collecting nodes") # fast
         stops_radius_dict = dict() # fast 
@@ -123,7 +123,7 @@ class Graph:
                         "stop_y": node.stop_y,
                         "radius": radius
                     }
-        print(f'time cost for generating radius loop in graph search {time()- time0}sec')
+        # print(f'time cost for generating radius loop in graph search {time()- time0}sec')
 
         stops_radius_list = [row for row in stops_radius_dict.values()]
         return stops_radius_list
@@ -311,7 +311,7 @@ class Graph:
                         nodeCostPair = NodeCostPair(end, 0)
                         start.children.append(nodeCostPair)
                         start.children_ids.add(end.id)
-        print(f'time cost for first origin triple loop {time()-time0}')
+        # print(f'time cost for first origin triple loop {time()-time0}')
 
         # walk 
         # add node that are reacheable through walking to its children
