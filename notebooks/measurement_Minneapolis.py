@@ -95,18 +95,19 @@ def run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WA
     
 
 def main():
-    START_POINTS = []
-    ELAPSE_TIME = "00:90:00"
+    START_POINTS = [(44.914121,-93.281455),(44.991735,-93.260639),(45.045887,-93.309348)]
+    ELAPSE_TIME = "00:30:00"
     AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
     MAX_WALKING_MIN = 12
     
-    DATA_PATH = "../data/stlouis_gtfs.zip"
+    DATA_PATH = "../data/Minneapolis_gtfs.zip"
     OUT_PATH = "/tmp/output" 
     DAY = "monday"
     sc = SCanalyzer(DATA_PATH)
     crs = sc.epsg
-    START_LOCATIONS = ["Busch Stadium", "Saint Louis University", "East St Louis Senior High School"]
-
+    #START_LOCATIONS = ["Gatsby Apartments", "Alpha Book Publisher", "E Diamond Lake Rd"]
+    START_LOCATIONS = ["St John's Child Care & Nursey","Salon On the Edge","Shingle Creek Park"]
+                     
     runs = []
     start_times = []
     # for day in ["monday"]:
@@ -121,8 +122,8 @@ def main():
     # runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
 
     # start_times = []
-    for day in ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]:
-        for start_time in range(0,24,6):
+    for day in ["monday", "tuesday"]:
+        for start_time in range(5,24,4):
             start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
     runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
     

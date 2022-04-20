@@ -46,15 +46,21 @@ gtfo = SCanalyzer(os.path.join('..', 'data', 'mmt_gtfs.zip'))
 census_gdf = gtfo.load_census()
 services_gdf = gtfo.load_yelp(api_key=api_key)
 
+config = Config(day="monday", elapse_time="00:20:00", interval="03:00:00", max_walking_min=10)
+config.set_starts(centroids=census_gdf)
+perf_df = pd.DataFrame(
+        columns=["geometry", "start_time", "search_time", "add_service_time", "add_census_time"])
+result_gdf = gtfo.search(config, perf_df)
+gtfo.add_service_metrics(result_gdf, services_gdf, perf_df)
 
-epsg = findEPSG(services_gdf['latitude'][0], services_gdf['longitude'][0])
-transformer = Transformer.from_crs(4326, epsg)
-stop_x, stop_y = transformer.transform(
-            services_gdf['latitude'], services_gdf['longitude'])
-services_gdf['stop_x'], services_gdf['stop_y'] = stop_x, stop_y
-gdf = gpd.GeoDataFrame(
-    geometry=gpd.points_from_xy(services_gdf.stop_x, services_gdf.stop_y), crs="EPSG:"+str(epsg))
-gdf.plot()
+# epsg = findEPSG(services_gdf['latitude'][0], services_gdf['longitude'][0])
+# transformer = Transformer.from_crs(4326, epsg)
+# stop_x, stop_y = transformer.transform(
+#             services_gdf['latitude'], services_gdf['longitude'])
+# services_gdf['stop_x'], services_gdf['stop_y'] = stop_x, stop_y
+# gdf = gpd.GeoDataFrame(
+#     geometry=gpd.points_from_xy(services_gdf.stop_x, services_gdf.stop_y), crs="EPSG:"+str(epsg))
+# gdf.plot()
 
 # gtfo = SCanalyzer(os.path.join('..', 'data', 'mmt_gtfs.zip'))
 # ax = plot_background(f"EPSG:{gtfo.epsg}")
