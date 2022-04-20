@@ -83,7 +83,7 @@ class SCanalyzer:
         # Save output:
         demographic_data.to_csv(cache_path, index=False)
 
-        return self._csvdf_to_gdf(demographic_data)
+        return demographic_data
 
     def load_yelp(self, api_key, services=["banks", "clinics", "dentists", "hospitals", "supermarket"], cache=True):
         cache_path = os.path.join(self.base_out_path, "services.csv")
