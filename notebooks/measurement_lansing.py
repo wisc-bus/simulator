@@ -100,12 +100,12 @@ def main():
     AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
     MAX_WALKING_MIN = 12
     
-    DATA_PATH = "../data/stlouis_gtfs.zip"
+    DATA_PATH = "../data/lansing_gtfs.zip"
     OUT_PATH = "/tmp/output" 
     DAY = "monday"
     sc = SCanalyzer(DATA_PATH)
     crs = sc.epsg
-    START_LOCATIONS = ["Busch Stadium", "Saint Louis University", "East St Louis Senior High School"]
+    START_LOCATIONS = ["Michigan State Capitol", "Potter Park Zoo", "Lansing Christian School"]
 
     runs = []
     start_times = []

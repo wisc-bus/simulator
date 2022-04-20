@@ -5,6 +5,8 @@
 <!-- [madison_short]:  -->
 [stlouis_short]: stlouis_short.png
 [stlouis_long]: stlouis_long.png
+[lansing_short]: lansing_short.png
+[lansing_long]: lansing_long.png
 
 ---
 ## **Part 1: Code quality improvements**
@@ -28,12 +30,22 @@
 
 ### *St. Louis, Missouri*
 
-* 90 min run:
+* 30 min run (Time Taken: 75.3187210559845):
+  * Max coverage of **a week**, unit: $km^2$
+    * Busch Stadium: $51.666879$
+    * Saint Louis University: $46.418509$
+    * East St Louis Senior High School:  $24.166318$
+  * Min coverage of **a week**, unit: $km^2$
+    * Busch Stadium: $36.898593$
+    * Saint Louis University: $22.212706$
+    * East St Louis Senior High School:  $10.964546$
+![alt text][stlouis_short]
+
+* 90 min run (Time Taken: 474.52902388572693):
   * Max coverage of **a week**, unit: $km^2$
     * Busch Stadium: $730.063943$
     * Saint Louis University: $660.430581$
     * East St Louis Senior High School:  $521.318002$
-![alt text][stlouis_short]
   * Min coverage of **a week**, unit: $km^2$
     * Busch Stadium: $635.901999$
     * Saint Louis University: $501.182033$
@@ -44,3 +56,25 @@
 ### *Minneapolis, Minnesota*
 
 ### *Lansing, Michigan*
+
+* 30 min run (Time Taken: 73.83022403717041):
+  * Max coverage of **a week**, unit: $km^2$
+    * Michigan State Capitol: $56.001443$
+    * Potter Park Zoo: $12.201751$
+    * Lansing Christian High School:  $5.780915$
+  * Min coverage of **a week**, unit: $km^2$
+    * Michigan State Capitol: $23.514244$
+    * Potter Park Zoo: $1.470077$
+    * Lansing Christian High School:  $0.621025$
+![alt text][lansing_short]
+
+* 90 min run (Time Taken: 398.38797783851624):
+  * Max coverage of **a week**, unit: $km^2$
+    * Michigan State Capitol: $218.005403$
+    * Potter Park Zoo: $144.727143$
+    * Lansing Christian High School:  $133.52313$
+  * Min coverage of **a week**, unit: $km^2$
+    * Michigan State Capitol: $14.579151$
+    * Potter Park Zoo: $0.056625$
+    * Lansing Christian High School:  $15.419283$
+![alt text][lansing_long]
