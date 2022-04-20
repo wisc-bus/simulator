@@ -28,13 +28,14 @@ def get_area(start_points=[], start_locations=[], busSim=None, crs=3174):
         geolocator = Nominatim(user_agent="user_test")
         for loc in start_locations:
             location = geolocator.geocode(loc)
+            print(location)
             start_point = (location.latitude, location.longitude)
             start_points.append(start_point)
     
     area_dict = {}
     # print(f'{start_points=}')
     for index, start in enumerate(start_points):
-        # print(f'{start=}')
+        print(f'{start=}')
         gdf = busSim.get_gdf(start_point=start)
         busSim.clear_graph()
         if gdf is None:
@@ -55,7 +56,9 @@ def draw_area_times(times, areas, data_path):
     
     for key in areas.keys():
         print(f'loc {key}')
-        print(f'{times=}, {areas[key]=}')
+        print(f'{areas[key]=}')
+        print(f'min value: {min(areas[key])}')
+        print(f'max value: {max(areas[key])}')
         ax.plot(times, areas[key], label = key)
     
     plt.xlabel('times')
@@ -74,9 +77,10 @@ def run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WA
         # print('cal area')
         for key, area in get_area(start_points=START_POINTS, start_locations=START_LOCATIONS, busSim=busSim, crs=crs).items():
             if key not in areas:
-                areas[key] = [area]
+                areas[key] = []
+                areas[key].append(float(area))
             else:
-                areas[key].append(area)
+                areas[key].append(float(area))
     # print(f'{areas=}')
     pre_day = ''
     day_index = 0
@@ -87,7 +91,7 @@ def run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WA
             pre_day = day
         start_times[index] = f"{start_times[index]}  {day_index}"
         
-    # print(start_times)
+    print(start_times)
     draw_area_times(start_times, areas, DATA_PATH)
     duration = time() - prog_start
     print(f'time taken {duration}')
@@ -106,6 +110,7 @@ def main():
     sc = SCanalyzer(DATA_PATH)
     crs = sc.epsg
     START_LOCATIONS = ["330 N Orchard St, Madison WI", "The Nat, Madison WI", "Olbrich Gardens, Madison WI"]
+    # START_LOCATIONS = ["Whispering Oaks, Minneapolis"]
 
     runs = []
     start_times = []
