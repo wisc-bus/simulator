@@ -194,7 +194,7 @@ def test_small_area_madison():
     AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
     MAX_WALKING_MIN = 12
     
-    DATA_PATH = "../data/mmt_gtfs.zip"
+    DATA_PATH = "../data/mmt_gtfs_old.zip"
     OUT_PATH = "/tmp/output" 
     DAY = "monday"
     sc = SCanalyzer(DATA_PATH)

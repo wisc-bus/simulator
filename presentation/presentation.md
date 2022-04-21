@@ -1,4 +1,11 @@
 # Presentation
+
+fix: font size
+     better x, y label
+     running for whole week of SCanalyzer
+
+[tester_results]:tester_results.png
+
 [perf_short]: perf_short.png
 [perf_long]: perf_long.png
 
@@ -6,6 +13,9 @@
 [madison_long]: madison_long.png
 [madison_service]: madison_service.png
 [madison_routes]: madison_routes.png
+[madison_city_plot]: madison_city_plot.png
+[madison_min_service_dist]: madison_min_service_dist.png
+[madison_min_service_time]: madison_min_service_time.png
 
 [stlouis_short]: stlouis_short.png
 [stlouis_long]: stlouis_long.png
@@ -27,6 +37,8 @@
 * Testing
   * Adding tests to the projects using pytest
     * Mainly tested manually created fake data to make sure project is working
+    * running **`pytest tester.py -v --disable-warnings`** in the same folder as testers.py should results:
+  ![alt text][tester_results]
 * Performance measurements/failed attempts:
   * One attempt is to increase the performance of the original graph search method by utilizing innate sort function from python. However, after the performance test, the original version was found to be better.
     * Below is the graph when the elapse time is short (30min), we can see both version have similar performance
@@ -41,7 +53,7 @@
 * Above is the madison city routes 
   
 ![alt text][madison_short]
-* 30 min elapsing run:
+* Above is the SCanalyzer result graph when given 30 min elapse time:
   * Time to run SCanalyzer: $79.7232$ `sec`
   * Max coverage of **a week**, unit: $km^2$
     * Olbrich Gardens: 31.8504
@@ -64,8 +76,19 @@
     * Olbrich Gardens: $3.7747$
     * The Nat: $0$
     * 330 N Orchard St: $19.3963$
+***
+* One interesting fact can be observed is that at **The Nat**, it seems like the bus coverage is relatively small
+  ![alt text][madison_city_plot]
+* From the graph above we can see that **The Nat** does have a small bubble, which means a small coverage: 
+
 * service graph:
   ![alt text][madison_service]
+
+* Routes with smallest service distance:
+  ![alt text][madison_min_service_dist]
+* Routes with smallest service time:
+  ![alt text][madison_min_service_time]
+
 
 ### *St. Louis, Missouri*
 ![alt text][stlouis_routes]
