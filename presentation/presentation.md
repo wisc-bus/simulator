@@ -28,6 +28,9 @@ fix: font size
 [minneapolis_routes]: minneapolis_routes.png
 [minneapolis_short]: minneapolis_short.png
 [minneapolis_long]: minneapolis_long.png
+[minneapolis_startpoints]:Minneapolis_startpoints.png
+[minneapolis_startpoint_high]:minneapolist_startpoint_high.png
+[minneapolis_startpoint_low]:minneapolist_startpoint_low.png
 
 [lansing_short]: lansing_short.png
 [lansing_long]: lansing_long.png
@@ -142,29 +145,38 @@ fix: font size
 
 ### *Minneapolis, Minnesota*
 ![alt text][minneapolis_routes]
-![alt text][minneapolis_short]
-* 30 min run:
-  * Time to run SCanalyzer: $499.7719$ 'sec'
-  * Max coverage of **Mon,Tues**, unit: $km^2$
-    * St John's Child Care & Nursey: $35.1814$
-    * Salon On the Edge: $54.0881$
-    * Shingle Creek Park:  $20.9968$
-  * Min coverage of **Mon,Tues**, unit: $km^2$
-    * St John's Child Care & Nursey: $24.8097$
-    * Salon On the Edge: $27.1013$
-    * Shingle Creek Park:  $1.4757$
+![alt text][minneapolis_startpoints]
 
-![alt text][minneapolis_long]
-* 90 min run:
-  * Time to run SCanalyzer: $46725.9450$ 'sec'
-  * Max coverage of **Mon,Tues**, unit: $km^2$
-    * St John's Child Care & Nursey: $568.9084$
-    * Salon On the Edge: $881.0581$
-    * Shingle Creek Park:  $581.2672$
-  * Min coverage of **Mon,Tues**, unit: $km^2$
-    * St John's Child Care & Nursey: $414.2151$
-    * Salon On the Edge: $542.8334$
-    * Shingle Creek Park:  $96.9203$
+* 30 min run (low) (Time Taken: 692.3481):
+![alt text][minneapolis_startpoint_low]
+
+|    | label                                    |   max coverage |   min coverage |
+|---:|:-----------------------------------------|---------------:|---------------:|
+|  0 | (44.820852518773165, -93.27007526760357) |       20.7171  |      5.09551   |
+|  1 | (45.03698099490727, -93.3273018807822)   |        9.2023  |      0.0125046 |
+|  2 | (45.07520646479199, -93.36447314869748)  |       10.0767  |      2.22048   |
+|  3 | (45.14351172737558, -93.26887266443758)  |       19.212   |      0         |
+|  4 | (45.01564156164276, -93.37466650992579)  |       12.282   |      0         |
+|  5 | (45.07391882519973, -93.26580601973103)  |       16.7926  |      0         |
+|  6 | (45.04092052687533, -93.26546083324378)  |       22.8279  |      1.27266   |
+|  7 | (44.84429728444731, -93.24484777443656)  |       30.9313  |      2.27534   |
+|  8 | (44.90964204554468, -93.4073130057834)   |       16.2539  |      5.93796   |
+|  9 | (44.99941607025379, -93.05624081015259)  |        4.16197 |      0         |
+
+* 30 min run (high) (Time Taken: 749.7002):
+![alt text][minneapolis_startpoint_high]
+
+|    | label                                    |   max coverage |   min coverage |
+|---:|:-----------------------------------------|---------------:|---------------:|
+|  0 | (44.96694574782479, -93.27932464626308)  |        57.0185 |        25.6812 |
+|  1 | (44.9908438111097, -93.24767264600557)   |        65.5928 |        31.7399 |
+|  2 | (44.96096525625919, -93.24283547951629)  |        78.2006 |        36.8776 |
+|  3 | (44.964202774732755, -93.2647555237972)  |        40.1659 |        24.8669 |
+|  4 | (44.96872234263041, -93.25058726230623)  |       100.084  |        51.7553 |
+|  5 | (44.976190237605174, -93.25424267826821) |        79.3079 |        31.1294 |
+|  6 | (44.973751479498084, -93.27271856402542) |       109.342  |        64.0048 |
+
+
 
 ### *Lansing, Michigan*
 
