@@ -16,6 +16,7 @@ fix: font size
 [madison_city_plot]: madison_city_plot.png
 [madison_min_service_dist]: madison_min_service_dist.png
 [madison_min_service_time]: madison_min_service_time.png
+[madison_start_points]: Madison_startpoints.png
 
 [stlouis_short]: stlouis_short.png
 [stlouis_long]: stlouis_long.png
@@ -49,6 +50,19 @@ fix: font size
 ## **Part 2: 4 City Analysis**
 
 ### *Madison, Wisconsin*
+
+![alt text][madison_start_points]
+
+|    | label                                   |   max coverage |   min coverage |
+|---:|:----------------------------------------|---------------:|---------------:|
+|  0 | (43.05863684011441, -89.33164201625276) |        1.44797 |       1.44797  |
+|  1 | (43.1447167157741, -89.36849196981703)  |        8.40589 |       8.40589  |
+|  2 | (43.13793231162969, -89.35904090074727) |        5.45128 |       5.45128  |
+|  3 | (43.10973220461785, -89.35378965001736) |        5.55401 |       5.55401  |
+|  4 | (43.11808048149292, -89.35926999648247) |        7.38527 |       7.16769  |
+|  5 | (43.08965426447594, -89.51219979010558) |        4.0406  |       0.321148 |
+|  6 | (43.12035329229006, -89.36689904070965) |        2.50079 |       2.50079  |
+
 ![alt text][madison_routes]
 * Above is the madison city routes 
   

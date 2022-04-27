@@ -25,28 +25,31 @@ def get_results(api_key, service, borders, epgs):
     parameters = {
         'term': service,
         'limit': limit,
-        'radius': radius,
+        'radius': min(radius, 40000),
         'latitude': centroid_lat,
         'longitude': centroid_lon}
     all_results = []
     response = requests.get(
         url=endpoint, params=parameters, headers=headers)
     result = response.json()
-    # print(result)
+    print(result.keys())
     all_results.extend(result['businesses'])
 
     found = result['total']
     searches = found // limit
 
     if searches != 0:
-        for i in range(searches):
-            offset = (i+1) * limit
-            parameters['offset'] = offset
-            response = requests.get(
-                url=endpoint, params=parameters, headers=headers)
-            result = response.json()
-            # print(len(all_results))
-            all_results.extend(result['businesses'])
+        try:
+            for i in range(searches):
+                offset = (i+1) * limit
+                parameters['offset'] = offset
+                response = requests.get(
+                    url=endpoint, params=parameters, headers=headers)
+                result = response.json()
+                # print(len(all_results))
+                all_results.extend(result['businesses'])
+        except Exception as err:
+            print(f'Unexpected {err=}')
     df = pd.DataFrame(
         columns=['id', 'service', 'name', 'latitude', 'longitude'])
 

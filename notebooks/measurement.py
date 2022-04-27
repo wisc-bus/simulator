@@ -15,6 +15,8 @@ from SCanalyzer import SCanalyzer
 from SCanalyzer.busSim import BusSim
 from SCanalyzer.busSim.manager import LocalManager
 
+global results
+
 def flatten(s):
     return gpd.GeoDataFrame({"geometry": gpd.GeoSeries([s.unary_union])})
 
@@ -39,15 +41,16 @@ def get_area(start_points=[], start_locations=[], busSim=None, crs=3174):
         gdf = busSim.get_gdf(start_point=start)
         busSim.clear_graph()
         if gdf is None:
-            area_dict[f'{start_locations[index]}'] = 0
+            area_dict[f'{start_points[index]}'] = 0
             continue
         gdf = gdf.to_crs(epsg=3174)
         bubble = flatten(gdf.geometry)
-        area_dict[f'{start_locations[index]}'] = bubble.geometry.area/10**6
-    # print(f'{area_dict=}')
+        area_dict[f'{start_points[index]}'] = bubble.geometry.area/10**6
+    print(f'{area_dict=}')
     return area_dict
 
 def draw_area_times(times, areas, data_path):
+    global results
     fig, ax = plt.subplots(figsize=(12,8)) 
     times = list(map(lambda x: datetime.strptime(x.capitalize(), "%A %H:%M:%S  %d"), times))
     formatter = mdates.DateFormatter("%a %H:%M")
@@ -58,6 +61,9 @@ def draw_area_times(times, areas, data_path):
         print(f'loc {key}')
         print(f'{areas[key]=}')
         print(f'min value: {min(areas[key])}')
+        results['min coverage'].append(min(areas[key]))
+        results['max coverage'].append(max(areas[key]))
+        results['label'].append(key)
         print(f'max value: {max(areas[key])}')
         ax.plot(times, areas[key], label = key)
     
@@ -68,6 +74,7 @@ def draw_area_times(times, areas, data_path):
     plt.savefig(data_path+'graph2.png')
 
 def run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs):
+    global results
     prog_start = time()
     areas = {}
     for start_time in start_times:
@@ -94,13 +101,26 @@ def run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WA
     print(start_times)
     draw_area_times(start_times, areas, DATA_PATH)
     duration = time() - prog_start
+    # results['time'].append(duration)
     print(f'time taken {duration}')
     return duration
     
 
 def main():
-    START_POINTS = []
-    ELAPSE_TIME = "01:30:00"
+    start_points_dict = {'low': [(43.05863684011441, -89.33164201625276), (43.1447167157741, -89.36849196981703), (43.13793231162969, -89.35904090074727), (43.10973220461785, -89.35378965001736), (43.11808048149292, -89.35926999648247), 
+    (43.11808048149292, -89.35926999648247), (43.13793231162969, -89.35904090074727), (43.10973220461785, -89.35378965001736), (43.08965426447594, -89.51219979010558), (43.12035329229006, -89.36689904070965)], 
+    'high': [(43.072651987610875, -89.39723842706803), (43.07057941738451, -89.40983549128191), (43.076773200791116, -89.38974345679428), (43.07497729569318, -89.40136555889757), (43.07057941738451, -89.40983549128191), (43.074180803910146, -89.38734526371564), (43.07157513303145, -89.38498094212332), (43.072651987610875, -89.39723842706803), (43.07916190274393, -89.38230221541342), (43.07916190274393, -89.38230221541342)]}
+    global results
+    results = {
+        "label":[],
+        "max coverage": [],
+        "min coverage": []
+    }
+
+    print(f'{len(start_points_dict["low"])=}')
+    START_POINTS = start_points_dict['low']
+    # START_POINTS = []
+    ELAPSE_TIME = "00:30:00"
     AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
     MAX_WALKING_MIN = 12
     
@@ -109,7 +129,8 @@ def main():
     DAY = "monday"
     sc = SCanalyzer(DATA_PATH)
     crs = sc.epsg
-    START_LOCATIONS = ["330 N Orchard St, Madison WI", "The Nat, Madison WI", "Olbrich Gardens, Madison WI"]
+    START_LOCATIONS = []
+    # START_LOCATIONS = ["330 N Orchard St, Madison", "The Nat, Madison", "Olbrich Gardens, Madison"]
     # START_LOCATIONS = ["Whispering Oaks, Minneapolis"]
 
     runs = []
@@ -126,13 +147,14 @@ def main():
     # runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
 
     # start_times = []
-    for day in ["monday", "tuesday"]:
-        for start_time in range(5,24,4):
+    for day in ["monday"]:
+        for start_time in range(7,23,8):
             start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
     runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
     
     # with open("new_version2.json", "w") as f:
     #     json.dump(runs, f)
+    print(pd.DataFrame(results).to_markdown())
 
 
 
