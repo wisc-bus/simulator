@@ -96,7 +96,7 @@ def run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WA
 
 def main():
     START_POINTS = []
-    ELAPSE_TIME = "00:90:00"
+    ELAPSE_TIME = "00:30:00"
     AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
     MAX_WALKING_MIN = 12
     

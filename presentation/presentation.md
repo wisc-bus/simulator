@@ -21,6 +21,9 @@ fix: font size
 [stlouis_short]: stlouis_short.png
 [stlouis_long]: stlouis_long.png
 [stlouis_routes]: stlouis_routes.jpg
+[stlouis_low]: stlouis_low.png
+[stlouis_high]: stlouis_high.png
+[stlouis_startpoints]: stlouis_startpoints.png
 
 [minneapolis_routes]: minneapolis_routes.png
 [minneapolis_short]: minneapolis_short.png
@@ -107,28 +110,35 @@ fix: font size
 ### *St. Louis, Missouri*
 ![alt text][stlouis_routes]
 
-![alt text][stlouis_short]
-* 30 min run (Time Taken: 75.3187210559845):
-  * Max coverage of **a week**, unit: $km^2$
-    * Busch Stadium: $51.666879$
-    * Saint Louis University: $46.418509$
-    * East St Louis Senior High School:  $24.166318$
-  * Min coverage of **a week**, unit: $km^2$
-    * Busch Stadium: $36.898593$
-    * Saint Louis University: $22.212706$
-    * East St Louis Senior High School:  $10.964546$
+![alt text][stlouis_startpoints]
+
+* 30 min run (low) (Time Taken: 72.66282796859741):
+![alt text][stlouis_low]
+
+|    | label                                    |   max coverage |   min coverage |
+|---:|:-----------------------------------------|---------------:|---------------:|
+|  0 | (38.746552975793826, -90.32366958934445) |       21.9341  |              0 |
+|  1 | (38.73228422884455, -90.23796506296235)  |       18.5819  |              0 |
+|  2 | (38.67320549137285, -90.26337385384753)  |       20.3912  |              0 |
+|  3 | (38.62526994097163, -90.10676075888955)  |       15.4586  |              0 |
+|  4 | (38.553566414916084, -90.17747677561692) |        5.5337  |              0 |
+|  5 | (38.74922605851386, -90.20346081153258)  |       12.2374  |              0 |
+|  6 | (38.699066460086975, -90.25582323640651) |        8.60969 |              0 |
+|  7 | (38.71368054319952, -90.32688905199662)  |       12.7927  |              0 |
+|  8 | (38.61458240297301, -90.27222035993542)  |       10.0945  |              0 |
 
 
-![alt text][stlouis_long]
-* 90 min run (Time Taken: 474.52902388572693):
-  * Max coverage of **a week**, unit: $km^2$
-    * Busch Stadium: $730.063943$
-    * Saint Louis University: $660.430581$
-    * East St Louis Senior High School:  $521.318002$
-  * Min coverage of **a week**, unit: $km^2$
-    * Busch Stadium: $635.901999$
-    * Saint Louis University: $501.182033$
-    * East St Louis Senior High School:  $322.564781$
+* 30 min run (high) (Time Taken: 75.69375801086426:
+![alt text][stlouis_high]
+
+|    | label                                    |   max coverage |   min coverage |
+|---:|:-----------------------------------------|---------------:|---------------:|
+|  0 | (38.653449080130734, -90.30491590026699) |        41.4912 |              0 |
+|  1 | (38.59105671485263, -90.27665443610043)  |        37.6306 |              0 |
+|  2 | (38.6397371209948, -90.33661872147931)   |        15.7728 |              0 |
+|  3 | (38.64673791210517, -90.30980061054092)  |        24.3654 |              0 |
+|  4 | (38.646968239007855, -90.33532779707863) |        21.7613 |              0 |
+|  5 | (38.649533395108314, -90.2968382927907)  |        47.0731 |              0 |
 
 ### *Minneapolis, Minnesota*
 ![alt text][minneapolis_routes]
