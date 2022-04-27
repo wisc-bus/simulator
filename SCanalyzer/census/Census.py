@@ -124,6 +124,7 @@ class Census:
             "Getting demographics data from Census.gov, this may take a couple minutes...")
 
         combined_data = []
+        CensusTracts = CensusTracts[0:500]
 
         if sample:
             CensusTracts = CensusTracts[0:10]
