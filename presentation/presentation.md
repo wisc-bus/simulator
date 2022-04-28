@@ -47,30 +47,67 @@ fix: font size
 * Testing
   * Adding tests to the projects using pytest
     * Mainly tested manually created fake data to make sure project is working
-    * running **`pytest tester.py -v --disable-warnings`** in the same folder as testers.py should results:
-  ![alt text][tester_results]
+    * running **`pytest tester.py -v --disable-warnings`** in the same folder as testers.py should results:  
+![alt text][tester_results]
 * Performance measurements/failed attempts:
   * One attempt is to increase the performance of the original graph search method by utilizing innate sort function from python. However, after the performance test, the original version was found to be better.
     * Below is the graph when the elapse time is short (30min), we can see both version have similar performance
-   ![alt text][perf_short]
+![alt text][perf_short]
     * Below is the graph when the elapse time is long (90min), we can see that the original version is much faster
-  ![alt text][perf_long]
+![alt text][perf_long]
 ---
 ## **Part 2: 4 City Analysis**
+
+### How score is calculated:
+
+* The score is an additional field which can be use to calculate the how good basic services infrastructure is in an area. This function is being used for each census block within a city to find the lowest scores and highest scores of the census block within that city. Then BusSim can be used to calculated the area coverage of that block
+```
+def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0):
+    x6 = 1
+    if banks == 0:
+        x6 = x6/2
+    if supermarkets == 0:
+        x6 = x6/2
+    if hospitals == 0:
+        x6 = x6/2
+    if clinics == 0:
+        x6 = x6/2
+    if dentists == 0:
+        x6 = x6/2
+    score = (area + banks + clinics + hospitals + dentists + supermarkets) * x6
+    return score
+```
 
 ### *Madison, Wisconsin*
 
 ![alt text][madison_start_points]
+* Madison running result from low score points, time taken = *38.5878sec*:
 
 |    | label                                   |   max coverage |   min coverage |
 |---:|:----------------------------------------|---------------:|---------------:|
-|  0 | (43.05863684011441, -89.33164201625276) |        1.44797 |       1.44797  |
+|  0 | (43.05863684011441, -89.33164201625276) |        1.44797 |       1.44068  |
 |  1 | (43.1447167157741, -89.36849196981703)  |        8.40589 |       8.40589  |
-|  2 | (43.13793231162969, -89.35904090074727) |        5.45128 |       5.45128  |
-|  3 | (43.10973220461785, -89.35378965001736) |        5.55401 |       5.55401  |
-|  4 | (43.11808048149292, -89.35926999648247) |        7.38527 |       7.16769  |
+|  2 | (43.13793231162969, -89.35904090074727) |        5.45128 |       5.3919   |
+|  3 | (43.10973220461785, -89.35378965001736) |        5.55401 |       1.7133   |
+|  4 | (43.11808048149292, -89.35926999648247) |        7.42133 |       3.76427  |
 |  5 | (43.08965426447594, -89.51219979010558) |        4.0406  |       0.321148 |
-|  6 | (43.12035329229006, -89.36689904070965) |        2.50079 |       2.50079  |
+|  6 | (43.12035329229006, -89.36689904070965) |        2.50079 |       0.435309 |
+
+<img src="madison_low.png" alt="madison low" width="600" height="400">
+
+* Madison running result from high score points, time take = *46.1974sec*:
+
+|    | label                                    |   max coverage |   min coverage |
+|---:|:-----------------------------------------|---------------:|---------------:|
+|  0 | (43.072651987610875, -89.39723842706803) |        57.9184 |        37.347  |
+|  1 | (43.07057941738451, -89.40983549128191)  |        42.8706 |        30.4432 |
+|  2 | (43.076773200791116, -89.38974345679428) |        39.1936 |        30.8769 |
+|  3 | (43.07497729569318, -89.40136555889757)  |        47.14   |        33.0444 |
+|  4 | (43.074180803910146, -89.38734526371564) |        44.3226 |        37.9903 |
+|  5 | (43.07157513303145, -89.38498094212332)  |        51.3447 |        35.0567 |
+|  6 | (43.07916190274393, -89.38230221541342)  |        40.5802 |        29.5571 |
+
+<img src="madison_high.png" alg="madison high" width="600" height="400">
 
 ![alt text][madison_routes]
 * Above is the madison city routes 
