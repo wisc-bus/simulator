@@ -32,7 +32,7 @@ def get_results(api_key, service, borders, epgs):
     response = requests.get(
         url=endpoint, params=parameters, headers=headers)
     result = response.json()
-    print(result.keys())
+    # print(result.keys())
     all_results.extend(result['businesses'])
 
     found = result['total']
