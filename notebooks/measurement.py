@@ -117,8 +117,8 @@ def main():
         "min coverage": []
     }
 
-    print(f'{len(start_points_dict["low"])=}')
-    START_POINTS = start_points_dict['low']
+    print(f'{len(start_points_dict["high"])=}')
+    START_POINTS = start_points_dict['high']
     # START_POINTS = []
     ELAPSE_TIME = "00:30:00"
     AVG_WALKING_SPEED = 1.4 # 1.4 meters per second
@@ -126,7 +126,6 @@ def main():
     
     DATA_PATH = "../data/mmt_gtfs.zip"
     OUT_PATH = "/tmp/output" 
-    DAY = "monday"
     sc = SCanalyzer(DATA_PATH)
     crs = sc.epsg
     START_LOCATIONS = []
@@ -147,8 +146,8 @@ def main():
     # runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
 
     # start_times = []
-    for day in ["monday"]:
-        for start_time in range(7,23,8):
+    for day in ["monday", "tuesday", "wednesday", "thursday", "friday"]:
+        for start_time in range(7,23,6):
             start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
     runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
     

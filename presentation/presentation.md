@@ -4,6 +4,15 @@ fix: font size
      better x, y label
      running for whole week of SCanalyzer
 
+
+More on performance
+service number
+
+show service plot color based on services score
+
+
+Compare 
+
 [tester_results]:tester_results.png
 
 [perf_short]: perf_short.png
