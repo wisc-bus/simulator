@@ -8,6 +8,8 @@ import geopandas as gpd
 import pandas as pd
 import matplotlib.dates as mdates
 import json
+from collections import OrderedDict
+from numpy import median
 
 DIR = Path('..')
 sys.path.insert(0, str(DIR))
@@ -63,15 +65,29 @@ def draw_area_times(times, areas, data_path):
         print(f'min value: {min(areas[key])}')
         results['min coverage'].append(min(areas[key]))
         results['max coverage'].append(max(areas[key]))
-        results['label'].append(key)
+        results['median coverage'].append(median(areas[key]))
         print(f'max value: {max(areas[key])}')
-        ax.plot(times, areas[key], label = key)
+        geoloctor = Nominatim(user_agent="reverse_user")
+        info = geoloctor.reverse(key[1:-1]).raw
+        if info != None:
+            info = info['address']
+            addr = ''
+            for index, addrkey in enumerate(info):
+                if index > 1:
+                    break
+                addr += " " + info[addrkey]
+        else:
+            addr = key
+        ax.plot(times, areas[key], label = addr)
+        results['label'].append(key)
     
-    plt.xlabel('times')
-    plt.ylabel('area')
-    plt.title('area vs times')
+    plt.xticks(fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.xlabel('Time', fontsize=18)
+    plt.ylabel("Area coverage "+ r'$(km^2)$', fontsize=18)
+    plt.title('Area Coverage vs Time')
     plt.legend()
-    plt.savefig(data_path+'graph2.png')
+    plt.savefig('mearsurement_plot.png')
 
 def run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs):
     global results
@@ -114,7 +130,8 @@ def main():
     results = {
         "label":[],
         "max coverage": [],
-        "min coverage": []
+        "min coverage": [],
+        "median coverage": []
     }
 
     print(f'{len(start_points_dict["high"])=}')
@@ -146,8 +163,10 @@ def main():
     # runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
 
     # start_times = []
-    for day in ["monday", "tuesday", "wednesday", "thursday", "friday"]:
-        for start_time in range(7,23,6):
+    days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    days = ["monday"]
+    for day in days:
+        for start_time in range(7,22,6):
             start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
     runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
     

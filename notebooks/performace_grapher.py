@@ -27,19 +27,20 @@ def graph(X,Y):
             width = 0.4, label="original_version")
     plt.bar(X_axis+0.2, Y2, color ='lightblue',
             width = 0.4, label="new_version")
-    plt.xticks(X_axis, X)
-    plt.xlabel("Frequency")
-    plt.ylabel("Time (sec)")
-    plt.title("Time vs Frequency")
+    plt.xticks(ticks=X_axis, labels=X, fontsize=14)
+    plt.yticks(fontsize=14)
+    plt.xlabel("Frequency", fontsize=18)
+    plt.ylabel("Time (sec)", fontsize=18)
+    plt.title("Time vs Frequency", fontsize=22)
     plt.legend()
-    plt.savefig("performance_graph_long_elapse.png")
+    plt.savefig("perf_short.png", bbox_inches="tight")
 
 # gets the x values, format: [x1, x2, x3...]
 # gets the y values, format: {'original_version':[y11,y12,y13...], 'new_version':[y21,y22,y23...]}
 def main():
     x = [3, 5, 9]
-    y = {'new_version':[225.83527493476868, 373.56403970718384, 796.3134660720825],
-         'original_version':[87.00426959991455, 135.68633890151978, 284.9673900604248]} 
+    y = {'new_version':[23.54348635673523, 17.449768543243408, 77.29141354560852],
+         'original_version':[26.363208770751953, 18.625696420669556, 75.41746616363525]} 
     graph(x,y)
 
 if __name__ == '__main__':

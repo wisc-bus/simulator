@@ -6,7 +6,6 @@ fix: font size
 
 
 More on performance
-service number
 
 show service plot color based on services score
 
@@ -121,7 +120,7 @@ def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0)
 ![alt text][madison_routes]
 * Above is the madison city routes 
   
-![alt text][madison_short]
+<!-- ![alt text][madison_short]
 * Above is the SCanalyzer result graph when given 30 min elapse time:
   * Time to run SCanalyzer: $79.7232$ `sec`
   * Max coverage of **a week**, unit: $km^2$
@@ -144,19 +143,19 @@ def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0)
   * Min coverage of **a week**, unit: $km^2$
     * Olbrich Gardens: $3.7747$
     * The Nat: $0$
-    * 330 N Orchard St: $19.3963$
-***
+    * 330 N Orchard St: $19.3963$ -->
+<!-- ***
 * One interesting fact can be observed is that at **The Nat**, it seems like the bus coverage is relatively small
   ![alt text][madison_city_plot]
-* From the graph above we can see that **The Nat** does have a small bubble, which means a small coverage: 
+* From the graph above we can see that **The Nat** does have a small bubble, which means a small coverage:  -->
 
 * service graph:
   ![alt text][madison_service]
 
-* Routes with smallest service distance:
+<!-- * Routes with smallest service distance:
   ![alt text][madison_min_service_dist]
 * Routes with smallest service time:
-  ![alt text][madison_min_service_time]
+  ![alt text][madison_min_service_time] -->
 
 
 ### *St. Louis, Missouri*
