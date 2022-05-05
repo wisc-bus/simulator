@@ -79,7 +79,7 @@ def draw_area_times(times, areas, data_path):
         else:
             addr = key
         ax.plot(times, areas[key], label = addr)
-        results['label'].append(key)
+        results['label'].append(addr)
     
     plt.xticks(fontsize=14)
     plt.yticks(fontsize=14)
@@ -163,10 +163,10 @@ def main():
     # runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
 
     # start_times = []
-    days = ["monday", "tuesday", "wednesday", "thursday", "friday"]
-    days = ["monday"]
+    days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    # days = ["monday"]
     for day in days:
-        for start_time in range(7,22,6):
+        for start_time in range(7,22,3):
             start_times.append('{} {:02}:{:02}:{:02}'.format(day, start_time, 0, 0))    
     runs.append(run(start_times, DATA_PATH, OUT_PATH, ELAPSE_TIME, AVG_WALKING_SPEED, MAX_WALKING_MIN, START_POINTS, START_LOCATIONS, crs))
     

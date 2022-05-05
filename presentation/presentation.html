@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>presentation.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="presentation">Presentation</h1>
+<p>fix: font size
+better x, y label
+running for whole week of SCanalyzer</p>
+<p>More on performance</p>
+<p>show service plot color based on services score</p>
+<p>Compare</p>
+<h2 id="part-1-code-quality-improvements"><strong>Part 1: Code quality improvements</strong></h2>
+<ul>
+<li>Fixes
+<ul>
+<li>Fixing the hard coded epsg</li>
+<li>Comments</li>
+<li>Project structure</li>
+</ul>
+</li>
+<li>Testing
+<ul>
+<li>Adding tests to the projects using pytest
+<ul>
+<li>Mainly tested manually created fake data to make sure project is working</li>
+<li>running <strong><code>pytest tester.py -v --disable-warnings</code></strong> in the same folder as testers.py should results:<br>
+<img src="tester_results.png" alt="alt text"></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Performance measurements/failed attempts:
+<ul>
+<li>One attempt is to increase the performance of the original graph search method by utilizing innate sort function from python. However, after the performance test, the original version was found to be better.
+<ul>
+<li>Below is the graph when the elapse time is short (30min), we can see both version have similar performance
+<img src="perf_short.png" alt="alt text"></li>
+<li>Below is the graph when the elapse time is long (90min), we can see that the original version is much faster
+<img src="perf_long.png" alt="alt text"></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="part-2-4-city-analysis"><strong>Part 2: 4 City Analysis</strong></h2>
+<h3 id="how-score-is-calculated">How score is calculated:</h3>
+<ul>
+<li>The score is an additional field which can be use to calculate the how good basic services infrastructure is in an area. This function is being used for each census block within a city to find the lowest scores and highest scores of the census block within that city. Then BusSim can be used to calculated the area coverage of that block</li>
+</ul>
+<pre class="hljs"><code><div>def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0):
+    x6 = 1
+    if banks == 0:
+        x6 = x6/2
+    if supermarkets == 0:
+        x6 = x6/2
+    if hospitals == 0:
+        x6 = x6/2
+    if clinics == 0:
+        x6 = x6/2
+    if dentists == 0:
+        x6 = x6/2
+    score = (area + banks + clinics + hospitals + dentists + supermarkets) * x6
+    return score
+</div></code></pre>
+<h3 id="madison-wisconsin"><em>Madison, Wisconsin</em></h3>
+<!-- ![alt text][madison_start_points] -->
+<ul>
+<li>Madison running result from low score points, time taken = <em>174.4922sec</em>:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max coverage</th>
+<th style="text-align:right">min coverage</th>
+<th style="text-align:right">median coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">503 Panther Trail</td>
+<td style="text-align:right">2.27287</td>
+<td style="text-align:right">1.44068</td>
+<td style="text-align:right">1.44797</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">1557 Wyoming Way</td>
+<td style="text-align:right">8.40589</td>
+<td style="text-align:right">8.40589</td>
+<td style="text-align:right">8.40589</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">Whitman Lane Whitetail Ridge</td>
+<td style="text-align:right">5.45128</td>
+<td style="text-align:right">5.3919</td>
+<td style="text-align:right">5.45128</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">2219 Myrtle Street</td>
+<td style="text-align:right">5.55401</td>
+<td style="text-align:right">1.7133</td>
+<td style="text-align:right">5.55401</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">1908 Northwestern Avenue</td>
+<td style="text-align:right">7.44066</td>
+<td style="text-align:right">3.74103</td>
+<td style="text-align:right">7.16769</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">7577 Kenyon Drive</td>
+<td style="text-align:right">5.36531</td>
+<td style="text-align:right">0.042519</td>
+<td style="text-align:right">4.0406</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">1503 Almo Avenue</td>
+<td style="text-align:right">2.50079</td>
+<td style="text-align:right">0.435309</td>
+<td style="text-align:right">2.50079</td>
+</tr>
+</tbody>
+</table>
+<img src="madison_low.png" alt="madison low" width="600" height="400">
+<ul>
+<li>Madison running result from high score points, time take = <em>207.3770sec</em>:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max coverage</th>
+<th style="text-align:right">min coverage</th>
+<th style="text-align:right">median coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">Lot 138 North Frances Street</td>
+<td style="text-align:right">57.9184</td>
+<td style="text-align:right">21.4564</td>
+<td style="text-align:right">45.1301</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">Civil War Cannon North Randall Avenue</td>
+<td style="text-align:right">42.8706</td>
+<td style="text-align:right">17.4803</td>
+<td style="text-align:right">40.8135</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">412 North Carroll Street</td>
+<td style="text-align:right">39.1936</td>
+<td style="text-align:right">23.1133</td>
+<td style="text-align:right">32.0827</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">Music Hall 925</td>
+<td style="text-align:right">47.14</td>
+<td style="text-align:right">17.7823</td>
+<td style="text-align:right">43.016</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">Pay Station 50 North Fairchild Street</td>
+<td style="text-align:right">44.3226</td>
+<td style="text-align:right">30.3078</td>
+<td style="text-align:right">37.9903</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">266 West Doty Street</td>
+<td style="text-align:right">51.3447</td>
+<td style="text-align:right">18.8604</td>
+<td style="text-align:right">35.0567</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">135 North Hancock Street</td>
+<td style="text-align:right">43.283</td>
+<td style="text-align:right">20.1093</td>
+<td style="text-align:right">36.8613</td>
+</tr>
+</tbody>
+</table>
+<img src="madison_high.png" alg="madison high" width="600" height="400">
+<p><img src="madison_routes.png" alt="alt text"></p>
+<ul>
+<li>
+<p>Above is the madison city routes</p>
+</li>
+<li>
+<p>service graph:
+<img src="madison_service.png" alt="alt text"></p>
+</li>
+</ul>
+<h3 id="st-louis-missouri"><em>St. Louis, Missouri</em></h3>
+<p><img src="stlouis_routes.jpg" alt="alt text"></p>
+<!-- ![alt text][stlouis_startpoints] -->
+<ul>
+<li>30 min run (low) (Time Taken: 72.66282796859741):
+<img src="stlouis_low.png" alt="alt text"></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max coverage</th>
+<th style="text-align:right">min coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">(38.746552975793826, -90.32366958934445)</td>
+<td style="text-align:right">21.9341</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">(38.73228422884455, -90.23796506296235)</td>
+<td style="text-align:right">18.5819</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">(38.67320549137285, -90.26337385384753)</td>
+<td style="text-align:right">20.3912</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">(38.62526994097163, -90.10676075888955)</td>
+<td style="text-align:right">15.4586</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">(38.553566414916084, -90.17747677561692)</td>
+<td style="text-align:right">5.5337</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">(38.74922605851386, -90.20346081153258)</td>
+<td style="text-align:right">12.2374</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">(38.699066460086975, -90.25582323640651)</td>
+<td style="text-align:right">8.60969</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">(38.71368054319952, -90.32688905199662)</td>
+<td style="text-align:right">12.7927</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">(38.61458240297301, -90.27222035993542)</td>
+<td style="text-align:right">10.0945</td>
+<td style="text-align:right">0</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>30 min run (high) (Time Taken: 75.69375801086426:
+<img src="stlouis_high.png" alt="alt text"></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max coverage</th>
+<th style="text-align:right">min coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">(38.653449080130734, -90.30491590026699)</td>
+<td style="text-align:right">41.4912</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">(38.59105671485263, -90.27665443610043)</td>
+<td style="text-align:right">37.6306</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">(38.6397371209948, -90.33661872147931)</td>
+<td style="text-align:right">15.7728</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">(38.64673791210517, -90.30980061054092)</td>
+<td style="text-align:right">24.3654</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">(38.646968239007855, -90.33532779707863)</td>
+<td style="text-align:right">21.7613</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">(38.649533395108314, -90.2968382927907)</td>
+<td style="text-align:right">47.0731</td>
+<td style="text-align:right">0</td>
+</tr>
+</tbody>
+</table>
+<h3 id="minneapolis-minnesota"><em>Minneapolis, Minnesota</em></h3>
+<p><img src="minneapolis_routes.png" alt="alt text">
+<img src="Minneapolis_startpoints.png" alt="alt text"></p>
+<ul>
+<li>30 min run (low) (Time Taken: 692.3481):
+<img src="minneapolist_startpoint_low.png" alt="alt text"></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max coverage</th>
+<th style="text-align:right">min coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">(44.820852518773165, -93.27007526760357)</td>
+<td style="text-align:right">20.7171</td>
+<td style="text-align:right">5.09551</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">(45.03698099490727, -93.3273018807822)</td>
+<td style="text-align:right">9.2023</td>
+<td style="text-align:right">0.0125046</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">(45.07520646479199, -93.36447314869748)</td>
+<td style="text-align:right">10.0767</td>
+<td style="text-align:right">2.22048</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">(45.14351172737558, -93.26887266443758)</td>
+<td style="text-align:right">19.212</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">(45.01564156164276, -93.37466650992579)</td>
+<td style="text-align:right">12.282</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">(45.07391882519973, -93.26580601973103)</td>
+<td style="text-align:right">16.7926</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">(45.04092052687533, -93.26546083324378)</td>
+<td style="text-align:right">22.8279</td>
+<td style="text-align:right">1.27266</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">(44.84429728444731, -93.24484777443656)</td>
+<td style="text-align:right">30.9313</td>
+<td style="text-align:right">2.27534</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">(44.90964204554468, -93.4073130057834)</td>
+<td style="text-align:right">16.2539</td>
+<td style="text-align:right">5.93796</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">(44.99941607025379, -93.05624081015259)</td>
+<td style="text-align:right">4.16197</td>
+<td style="text-align:right">0</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>30 min run (high) (Time Taken: 749.7002):
+<img src="minneapolist_startpoint_high.png" alt="alt text"></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max coverage</th>
+<th style="text-align:right">min coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">(44.96694574782479, -93.27932464626308)</td>
+<td style="text-align:right">57.0185</td>
+<td style="text-align:right">25.6812</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">(44.9908438111097, -93.24767264600557)</td>
+<td style="text-align:right">65.5928</td>
+<td style="text-align:right">31.7399</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">(44.96096525625919, -93.24283547951629)</td>
+<td style="text-align:right">78.2006</td>
+<td style="text-align:right">36.8776</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">(44.964202774732755, -93.2647555237972)</td>
+<td style="text-align:right">40.1659</td>
+<td style="text-align:right">24.8669</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">(44.96872234263041, -93.25058726230623)</td>
+<td style="text-align:right">100.084</td>
+<td style="text-align:right">51.7553</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">(44.976190237605174, -93.25424267826821)</td>
+<td style="text-align:right">79.3079</td>
+<td style="text-align:right">31.1294</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">(44.973751479498084, -93.27271856402542)</td>
+<td style="text-align:right">109.342</td>
+<td style="text-align:right">64.0048</td>
+</tr>
+</tbody>
+</table>
+<h3 id="lansing-michigan"><em>Lansing, Michigan</em></h3>
+<p><img src="lansing_routes.jpg" alt="alt text"></p>
+<!-- ![alt text][lansing_startpoints] -->
+<ul>
+<li>30 min run (low) (Time Taken: 113.42274689674377):
+<img src="lansing_low.png" alt="alt text"></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max coverage</th>
+<th style="text-align:right">min coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">(42.69552749899424, -84.59724385814187)</td>
+<td style="text-align:right">4.8206</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">(42.678903862848266, -84.59248159369493)</td>
+<td style="text-align:right">10.7233</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">(42.70093874047502, -84.5972371795897)</td>
+<td style="text-align:right">0.281388</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">(42.7007910840444, -84.5572856246274)</td>
+<td style="text-align:right">13.6892</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">(42.677790726888496, -84.57890510682235)</td>
+<td style="text-align:right">8.0564</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">(42.69182814771287, -84.61354679022507)</td>
+<td style="text-align:right">12.9615</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">(42.68622809427853, -84.56495335422156)</td>
+<td style="text-align:right">21.0822</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">(42.67809941765349, -84.5682437067551)</td>
+<td style="text-align:right">6.51761</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">(42.71365682127145, -84.53426523200933)</td>
+<td style="text-align:right">12.0191</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">(42.70780457246975, -84.56169111850734)</td>
+<td style="text-align:right">17.3991</td>
+<td style="text-align:right">0</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>30 min run (high) (Time Taken: 128.57801747322083:
+<img src="lansing_high.png" alt="alt text"></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max coverage</th>
+<th style="text-align:right">min coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">(42.70154967243691, -84.5492375391658)</td>
+<td style="text-align:right">20.9791</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">(42.7089628139353, -84.54494465393294)</td>
+<td style="text-align:right">20.8449</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">(42.700336171040526, -84.54284497805143)</td>
+<td style="text-align:right">18.501</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">(42.71004236075822, -84.40608454957669)</td>
+<td style="text-align:right">13.3966</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">(42.689978589189316, -84.54221142906732)</td>
+<td style="text-align:right">17.8532</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">(42.7650948183785, -84.49947250001442)</td>
+<td style="text-align:right">22.0433</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">(42.72571904933564, -84.45452833285272)</td>
+<td style="text-align:right">22.7038</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">(42.73088680199716, -84.47358345971233)</td>
+<td style="text-align:right">38.1766</td>
+<td style="text-align:right">0</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">(42.729934705198126, -84.46865888239998)</td>
+<td style="text-align:right">44.6854</td>
+<td style="text-align:right">0</td>
+</tr>
+</tbody>
+</table>
+<!-- * 30 min run (Time Taken: 73.83022403717041):
+  * Max coverage of **a week**, unit: $km^2$
+    * Michigan State Capitol: $56.001443$
+    * Potter Park Zoo: $12.201751$
+    * Lansing Christian High School:  $5.780915$
+  * Min coverage of **a week**, unit: $km^2$
+    * Michigan State Capitol: $23.514244$
+    * Potter Park Zoo: $1.470077$
+    * Lansing Christian High School:  $0.621025$
+![alt text][lansing_short]
+
+* 90 min run (Time Taken: 398.38797783851624):
+  * Max coverage of **a week**, unit: $km^2$
+    * Michigan State Capitol: $218.005403$
+    * Potter Park Zoo: $144.727143$
+    * Lansing Christian High School:  $133.52313$
+  * Min coverage of **a week**, unit: $km^2$
+    * Michigan State Capitol: $14.579151$
+    * Potter Park Zoo: $0.056625$
+    * Lansing Christian High School:  $15.419283$
+![alt text][lansing_long] -->
+
+</body>
+</html>

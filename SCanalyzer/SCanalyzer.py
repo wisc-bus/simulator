@@ -111,7 +111,6 @@ class SCanalyzer:
                 y_idx = floor((y - min_y) / grid_size)
                 if x_idx >= 0 and x_idx < x_num and y_idx >= 0 and y_idx < y_num:
                     grid[y_idx][x_idx] += 1
-
             return [grid]
 
         services_grid_series = services_gdf.groupby("service").apply(get_grid)

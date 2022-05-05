@@ -86,82 +86,51 @@ def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0)
     return score
 ```
 
+
 ### *Madison, Wisconsin*
 
-![alt text][madison_start_points]
-* Madison running result from low score points, time taken = *38.5878sec*:
+<!-- ![alt text][madison_start_points] -->
+* Madison running result from low score points, time taken = *174.4922sec*:
 
-|    | label                                   |   max coverage |   min coverage |
-|---:|:----------------------------------------|---------------:|---------------:|
-|  0 | (43.05863684011441, -89.33164201625276) |        1.44797 |       1.44068  |
-|  1 | (43.1447167157741, -89.36849196981703)  |        8.40589 |       8.40589  |
-|  2 | (43.13793231162969, -89.35904090074727) |        5.45128 |       5.3919   |
-|  3 | (43.10973220461785, -89.35378965001736) |        5.55401 |       1.7133   |
-|  4 | (43.11808048149292, -89.35926999648247) |        7.42133 |       3.76427  |
-|  5 | (43.08965426447594, -89.51219979010558) |        4.0406  |       0.321148 |
-|  6 | (43.12035329229006, -89.36689904070965) |        2.50079 |       0.435309 |
+|    | label                        |   max coverage |   min coverage |   median coverage |
+|---:|:-----------------------------|---------------:|---------------:|------------------:|
+|  0 | 503 Panther Trail            |        2.27287 |       1.44068  |           1.44797 |
+|  1 | 1557 Wyoming Way             |        8.40589 |       8.40589  |           8.40589 |
+|  2 | Whitman Lane Whitetail Ridge |        5.45128 |       5.3919   |           5.45128 |
+|  3 | 2219 Myrtle Street           |        5.55401 |       1.7133   |           5.55401 |
+|  4 | 1908 Northwestern Avenue     |        7.44066 |       3.74103  |           7.16769 |
+|  5 | 7577 Kenyon Drive            |        5.36531 |       0.042519 |           4.0406  |
+|  6 | 1503 Almo Avenue             |        2.50079 |       0.435309 |           2.50079 |
 
 <img src="madison_low.png" alt="madison low" width="600" height="400">
 
-* Madison running result from high score points, time take = *46.1974sec*:
+* Madison running result from high score points, time take = *207.3770sec*:
 
-|    | label                                    |   max coverage |   min coverage |
-|---:|:-----------------------------------------|---------------:|---------------:|
-|  0 | (43.072651987610875, -89.39723842706803) |        57.9184 |        37.347  |
-|  1 | (43.07057941738451, -89.40983549128191)  |        42.8706 |        30.4432 |
-|  2 | (43.076773200791116, -89.38974345679428) |        39.1936 |        30.8769 |
-|  3 | (43.07497729569318, -89.40136555889757)  |        47.14   |        33.0444 |
-|  4 | (43.074180803910146, -89.38734526371564) |        44.3226 |        37.9903 |
-|  5 | (43.07157513303145, -89.38498094212332)  |        51.3447 |        35.0567 |
-|  6 | (43.07916190274393, -89.38230221541342)  |        40.5802 |        29.5571 |
+|    | label                                 |   max coverage |   min coverage |   median coverage |
+|---:|:--------------------------------------|---------------:|---------------:|------------------:|
+|  0 | Lot 138 North Frances Street          |        57.9184 |        21.4564 |           45.1301 |
+|  1 | Civil War Cannon North Randall Avenue |        42.8706 |        17.4803 |           40.8135 |
+|  2 | 412 North Carroll Street              |        39.1936 |        23.1133 |           32.0827 |
+|  3 | Music Hall 925                        |        47.14   |        17.7823 |           43.016  |
+|  4 | Pay Station 50 North Fairchild Street |        44.3226 |        30.3078 |           37.9903 |
+|  5 | 266 West Doty Street                  |        51.3447 |        18.8604 |           35.0567 |
+|  6 | 135 North Hancock Street              |        43.283  |        20.1093 |           36.8613 |
 
 <img src="madison_high.png" alg="madison high" width="600" height="400">
 
 ![alt text][madison_routes]
 * Above is the madison city routes 
   
-<!-- ![alt text][madison_short]
-* Above is the SCanalyzer result graph when given 30 min elapse time:
-  * Time to run SCanalyzer: $79.7232$ `sec`
-  * Max coverage of **a week**, unit: $km^2$
-    * Olbrich Gardens: 31.8504
-    * The Nat: 0.9351
-    * 330 N Orchard St:  47.3418
-  * Min coverage of **a week**, unit: $km^2$
-    * Olbrich Gardens: 3.775
-    * The Nat: 0
-    * 330 N Orchard St:  0.0181
-  
-![alt text][madison_long]
-* 90 min elapsing run:
-  * Time to run SCanalyzer: $613.922$ `sec`
-  * Max coverage of **a week**, unit: $km^2$
-    * Olbrich Gardens: $224.9967$
-    * The Nat: $124.0213$
-    * 330 N Orchard St:  $264.0516$
-
-  * Min coverage of **a week**, unit: $km^2$
-    * Olbrich Gardens: $3.7747$
-    * The Nat: $0$
-    * 330 N Orchard St: $19.3963$ -->
-<!-- ***
-* One interesting fact can be observed is that at **The Nat**, it seems like the bus coverage is relatively small
-  ![alt text][madison_city_plot]
-* From the graph above we can see that **The Nat** does have a small bubble, which means a small coverage:  -->
 
 * service graph:
   ![alt text][madison_service]
 
-<!-- * Routes with smallest service distance:
-  ![alt text][madison_min_service_dist]
-* Routes with smallest service time:
-  ![alt text][madison_min_service_time] -->
 
 
 ### *St. Louis, Missouri*
 ![alt text][stlouis_routes]
 
-![alt text][stlouis_startpoints]
+<!-- ![alt text][stlouis_startpoints] -->
 
 * 30 min run (low) (Time Taken: 72.66282796859741):
 ![alt text][stlouis_low]
@@ -229,7 +198,7 @@ def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0)
 ### *Lansing, Michigan*
 ![alt text][lansing_routes]
 
-![alt text][lansing_startpoints]
+<!-- ![alt text][lansing_startpoints] -->
 
 * 30 min run (low) (Time Taken: 113.42274689674377):
 ![alt text][lansing_low]
@@ -263,7 +232,7 @@ def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0)
 |  7 | (42.73088680199716, -84.47358345971233)  |        38.1766 |              0 |
 |  8 | (42.729934705198126, -84.46865888239998) |        44.6854 |              0 |
 
-* 30 min run (Time Taken: 73.83022403717041):
+<!-- * 30 min run (Time Taken: 73.83022403717041):
   * Max coverage of **a week**, unit: $km^2$
     * Michigan State Capitol: $56.001443$
     * Potter Park Zoo: $12.201751$
@@ -283,4 +252,4 @@ def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0)
     * Michigan State Capitol: $14.579151$
     * Potter Park Zoo: $0.056625$
     * Lansing Christian High School:  $15.419283$
-![alt text][lansing_long]
+![alt text][lansing_long] -->
