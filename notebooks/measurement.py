@@ -19,8 +19,8 @@ from SCanalyzer.busSim.manager import LocalManager
 
 global results
 
-def flatten(s):
-    return gpd.GeoDataFrame({"geometry": gpd.GeoSeries([s.unary_union])})
+def flatten(s, crs):
+    return gpd.GeoDataFrame({"geometry": gpd.GeoSeries([s.unary_union]), 'crs': crs})
 
 def gen_busSim(data_path=None, out_path=None, day=None, start_time=None, elapse_time=None, avg_walking_speed=None, max_walking_min=None):
     manager = LocalManager(data_path, out_path, None)
@@ -45,7 +45,7 @@ def get_area(start_points=[], start_locations=[], busSim=None, crs=3174):
         if gdf is None:
             area_dict[f'{start_points[index]}'] = 0
             continue
-        gdf = gdf.to_crs(epsg=3174)
+        gdf = gdf.to_crs(epsg=crs)
         bubble = flatten(gdf.geometry)
         area_dict[f'{start_points[index]}'] = bubble.geometry.area/10**6
     print(f'{area_dict=}')
@@ -144,7 +144,7 @@ def main():
     DATA_PATH = "../data/mmt_gtfs.zip"
     OUT_PATH = "/tmp/output" 
     sc = SCanalyzer(DATA_PATH)
-    crs = sc.epsg
+    crs = 3174
     START_LOCATIONS = []
     # START_LOCATIONS = ["330 N Orchard St, Madison", "The Nat, Madison", "Olbrich Gardens, Madison"]
     # START_LOCATIONS = ["Whispering Oaks, Minneapolis"]
