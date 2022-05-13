@@ -221,7 +221,7 @@ class SCanalyzer:
                 epsg = findEPSG(stops["stop_lat"][0], stops["stop_lon"][0])
                 self.epsg = epsg
                 if 'stops_meter.txt' in zf.namelist():
-                    print('stops_meter exists')
+                    # print('stops_meter exists')
                     return
                 transformer = Transformer.from_crs(4326, epsg)
                 stop_x, stop_y = transformer.transform(
@@ -229,7 +229,7 @@ class SCanalyzer:
                 stops["stop_x"] = stop_x
                 stops["stop_y"] = stop_y
             zf.writestr('stops_meter.txt', data=stops.to_csv(index=False))
-            print('zf namelist', zf.namelist())
+            # print('zf namelist', zf.namelist())
 
     def _get_borders(self):
         # TODO: optimize

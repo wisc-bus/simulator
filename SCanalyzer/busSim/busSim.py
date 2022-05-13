@@ -13,7 +13,7 @@ class BusSim:
         self,
         manager,
         day,
-        start_time,
+        start_time, 
         elapse_time,
         avg_walking_speed=1.4,
         max_walking_min=-1,  # HACK

@@ -202,7 +202,7 @@ class Graph:
                     right_node.children.append(NodeCostPair(node,distance_right))
                     node.children_ids.add(right_node.id)
                     right_node.children_ids.add(node.id)
-        print(f'building walk cost {time()-time0}')
+        # print(f'building walk cost {time()-time0}')
             
 
     # new version
@@ -238,7 +238,7 @@ class Graph:
         for stop_id, nodes in stop_node_dict.items():
             for node in nodes:
                 node.children.extend([NodeCostPair(n, 0) for n in filter(lambda n: n.arrival_time>node.arrival_time, nodes)])
-        print(f'new time for reducted triple for loop {time() - time0}')
+        # print(f'new time for reducted triple for loop {time() - time0}')
 
         # walk (Charles's version)
         time0 = time()
@@ -246,7 +246,7 @@ class Graph:
         for index, node in enumerate(self.nodes):
             node.index = index
         time1 = time()
-        print(f'time for sort nodes {time1-time0}')
+        # print(f'time for sort nodes {time1-time0}')
 
     # OLDversion
     def _constuct_graph(self):

@@ -365,643 +365,826 @@ code {
           : 'default'
     });
   </script>
-<h1 id="presentation">Presentation</h1>
-<p>fix: font size
-better x, y label
-running for whole week of SCanalyzer</p>
-<p>More on performance</p>
-<p>show service plot color based on services score</p>
-<p>Compare</p>
-<h2 id="part-1-code-quality-improvements"><strong>Part 1: Code quality improvements</strong></h2>
+<h1 id="final-report-analyzing-services-for-madison-wi-stlouis-mo-minneapolis-mn-and-lansing-mi">Final Report: Analyzing Services for Madison WI, St.Louis MO, Minneapolis MN, and Lansing MI</h1>
+<h2 id="part-1-introduction"><strong>Part 1: Introduction</strong></h2>
+<p>For this project, we would like to understand how different services (banks, clinics, dentistries, hospitals, and supermarkets) are distributed in a city and whether people can reach to the same level of services when they take buses. Take Madison as an example, among all the two hundred fifty thousand people living in different census blocks in Madison, how do we know whether anyone from any census blocks can get to the same level of services when they take buses. Services are distributed well in a city if anyone from any place can reach to the same level of services when they take buses. In this project, we are going to explore four different cities: Madison WI, St.Louis MO, Minneapolis MN, Lansing MI.</p>
+<h3 id="service-score-calculation"><strong>Service Score Calculation</strong></h3>
 <ul>
-<li>Fixes
-<ul>
-<li>Fixing the hard coded epsg</li>
-<li>Comments</li>
-<li>Project structure</li>
+<li>The level of services reached is a very subjective term, hence we decided to implement a function to give a score to measure how good services are in an area. A higher score means that the level of services reached is better.</li>
+<li>We chose to implement a sigmoid function because the sigmoid function has a s-shape. The reason why we prefer a s-shape is that when we reach enough number of services, the score should be kind of flat due to saturation.</li>
+<li>This function is being used for each census block within a city to find the lowest scores and highest scores of the census block within that city. It is also being used to calculate the reachablity of bus routes.</li>
 </ul>
-</li>
-<li>Testing
-<ul>
-<li>Adding tests to the projects using pytest
-<ul>
-<li>Mainly tested manually created fake data to make sure project is working</li>
-<li>running <strong><code>pytest tester.py -v --disable-warnings</code></strong> in the same folder as testers.py should results:<br>
-<img src="tester_results.png" alt="alt text"></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>Performance measurements/failed attempts:
-<ul>
-<li>One attempt is to increase the performance of the original graph search method by utilizing innate sort function from python. However, after the performance test, the original version was found to be better.
-<ul>
-<li>Below is the graph when the elapse time is short (30min), we can see both version have similar performance
-<img src="perf_short.png" alt="alt text"></li>
-<li>Below is the graph when the elapse time is long (90min), we can see that the original version is much faster
-<img src="perf_long.png" alt="alt text"></li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<hr>
-<h2 id="part-2-4-city-analysis"><strong>Part 2: 4 City Analysis</strong></h2>
-<h3 id="how-score-is-calculated">How score is calculated:</h3>
-<ul>
-<li>The score is an additional field which can be use to calculate the how good basic services infrastructure is in an area. This function is being used for each census block within a city to find the lowest scores and highest scores of the census block within that city. Then BusSim can be used to calculated the area coverage of that block</li>
-</ul>
-<pre class="hljs"><code><div>def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0):
-    x6 = 1
-    if banks == 0:
-        x6 = x6/2
-    if supermarkets == 0:
-        x6 = x6/2
-    if hospitals == 0:
-        x6 = x6/2
-    if clinics == 0:
-        x6 = x6/2
-    if dentists == 0:
-        x6 = x6/2
-    score = (area + banks + clinics + hospitals + dentists + supermarkets) * x6
+<pre class="hljs"><code><div>def get_sigmoid(x):
+    return 1/(1+math.e**(-x)) - 0.5
+
+def get_score(banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0):
+    score = get_sigmoid(banks) + get_sigmoid(clinics) + get_sigmoid(hospitals) + get_sigmoid(dentists) + get_sigmoid(supermarkets)
     return score
 </div></code></pre>
-<h3 id="madison-wisconsin"><em>Madison, Wisconsin</em></h3>
-<!-- ![alt text][madison_start_points] -->
+<hr>
+<h2 id="part-2-four-cities-analysis"><strong>Part 2: Four Cities Analysis</strong></h2>
+<h3 id="methods"><strong>Methods:</strong></h3>
 <ul>
-<li>Madison running result from low score points, time taken = <em>174.4922sec</em>:</li>
+<li>For each city, we used the centroid of each census block as the starting point for SCANanalyzer to run the bus simulator.</li>
+<li>For the score vs. time graphs, each line represents a centroid in a census block. These centroids are deliberately selected by calculating their services scores for each census block. The ten centroids with the highest service scores mean that these ten census blocks have a lot of services in them. The ten centroids with the lowest service scores mean that these ten census blocks do not have many services in them. Then we used these top ten and bottom ten centroids as starting points to run the bus simulator and find their reachable areas every three hours from Monday to Sunday using a elapse time of 30 minutes. Then, we can calculate the service scores based on the reachable areas. The score vs. time graphs show how services scores change for different time.</li>
+<li>For the heat maps, darker colors mean that the service scores are higher. The service score in each census block is calculated by running bus simulator from each centroid and calculating the services contained in each reachable area.</li>
 </ul>
-<table>
-<thead>
-<tr>
-<th style="text-align:right"></th>
-<th style="text-align:left">label</th>
-<th style="text-align:right">max coverage</th>
-<th style="text-align:right">min coverage</th>
-<th style="text-align:right">median coverage</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right">0</td>
-<td style="text-align:left">503 Panther Trail</td>
-<td style="text-align:right">2.27287</td>
-<td style="text-align:right">1.44068</td>
-<td style="text-align:right">1.44797</td>
-</tr>
-<tr>
-<td style="text-align:right">1</td>
-<td style="text-align:left">1557 Wyoming Way</td>
-<td style="text-align:right">8.40589</td>
-<td style="text-align:right">8.40589</td>
-<td style="text-align:right">8.40589</td>
-</tr>
-<tr>
-<td style="text-align:right">2</td>
-<td style="text-align:left">Whitman Lane Whitetail Ridge</td>
-<td style="text-align:right">5.45128</td>
-<td style="text-align:right">5.3919</td>
-<td style="text-align:right">5.45128</td>
-</tr>
-<tr>
-<td style="text-align:right">3</td>
-<td style="text-align:left">2219 Myrtle Street</td>
-<td style="text-align:right">5.55401</td>
-<td style="text-align:right">1.7133</td>
-<td style="text-align:right">5.55401</td>
-</tr>
-<tr>
-<td style="text-align:right">4</td>
-<td style="text-align:left">1908 Northwestern Avenue</td>
-<td style="text-align:right">7.44066</td>
-<td style="text-align:right">3.74103</td>
-<td style="text-align:right">7.16769</td>
-</tr>
-<tr>
-<td style="text-align:right">5</td>
-<td style="text-align:left">7577 Kenyon Drive</td>
-<td style="text-align:right">5.36531</td>
-<td style="text-align:right">0.042519</td>
-<td style="text-align:right">4.0406</td>
-</tr>
-<tr>
-<td style="text-align:right">6</td>
-<td style="text-align:left">1503 Almo Avenue</td>
-<td style="text-align:right">2.50079</td>
-<td style="text-align:right">0.435309</td>
-<td style="text-align:right">2.50079</td>
-</tr>
-</tbody>
-</table>
-<img src="madison_low.png" alt="madison low" width="600" height="400">
-<ul>
-<li>Madison running result from high score points, time take = <em>207.3770sec</em>:</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th style="text-align:right"></th>
-<th style="text-align:left">label</th>
-<th style="text-align:right">max coverage</th>
-<th style="text-align:right">min coverage</th>
-<th style="text-align:right">median coverage</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right">0</td>
-<td style="text-align:left">Lot 138 North Frances Street</td>
-<td style="text-align:right">57.9184</td>
-<td style="text-align:right">21.4564</td>
-<td style="text-align:right">45.1301</td>
-</tr>
-<tr>
-<td style="text-align:right">1</td>
-<td style="text-align:left">Civil War Cannon North Randall Avenue</td>
-<td style="text-align:right">42.8706</td>
-<td style="text-align:right">17.4803</td>
-<td style="text-align:right">40.8135</td>
-</tr>
-<tr>
-<td style="text-align:right">2</td>
-<td style="text-align:left">412 North Carroll Street</td>
-<td style="text-align:right">39.1936</td>
-<td style="text-align:right">23.1133</td>
-<td style="text-align:right">32.0827</td>
-</tr>
-<tr>
-<td style="text-align:right">3</td>
-<td style="text-align:left">Music Hall 925</td>
-<td style="text-align:right">47.14</td>
-<td style="text-align:right">17.7823</td>
-<td style="text-align:right">43.016</td>
-</tr>
-<tr>
-<td style="text-align:right">4</td>
-<td style="text-align:left">Pay Station 50 North Fairchild Street</td>
-<td style="text-align:right">44.3226</td>
-<td style="text-align:right">30.3078</td>
-<td style="text-align:right">37.9903</td>
-</tr>
-<tr>
-<td style="text-align:right">5</td>
-<td style="text-align:left">266 West Doty Street</td>
-<td style="text-align:right">51.3447</td>
-<td style="text-align:right">18.8604</td>
-<td style="text-align:right">35.0567</td>
-</tr>
-<tr>
-<td style="text-align:right">6</td>
-<td style="text-align:left">135 North Hancock Street</td>
-<td style="text-align:right">43.283</td>
-<td style="text-align:right">20.1093</td>
-<td style="text-align:right">36.8613</td>
-</tr>
-</tbody>
-</table>
-<img src="madison_high.png" alg="madison high" width="600" height="400">
-<p><img src="madison_routes.png" alt="alt text"></p>
+<h3 id="results"><strong>Results:</strong></h3>
+<h4 id="madison-wisconsin"><strong>Madison, Wisconsin</strong></h4>
 <ul>
 <li>
-<p>Above is the madison city routes</p>
+<p>Overview of Madison routes network</p>
+<ul>
+<li>Here is an overview of all the bus routes in Madison, WI:</li>
+</ul>
+<img align="center" src="madison_routes.png" alt="madison_routes" width="600" height="400">
+<ul>
+<li>In Madison, the route network focuses on hubs at the Capitol Square in downtown Madison and four major transfer points in outer parts of Madison.  Many routes serve downtown Madison and UW-Madison, where traffic usage is high.</li>
+</ul>
 </li>
 <li>
-<p>service graph:
-<img src="madison_service.png" alt="alt text"></p>
+<p>The ten census centroids with the highest service scores:</p>
 </li>
 </ul>
-<h3 id="st-louis-missouri"><em>St. Louis, Missouri</em></h3>
-<p><img src="stlouis_routes.jpg" alt="alt text"></p>
-<!-- ![alt text][stlouis_startpoints] -->
-<ul>
-<li>30 min run (low) (Time Taken: 72.66282796859741):
-<img src="stlouis_low.png" alt="alt text"></li>
-</ul>
 <table>
 <thead>
 <tr>
 <th style="text-align:right"></th>
 <th style="text-align:left">label</th>
-<th style="text-align:right">max coverage</th>
-<th style="text-align:right">min coverage</th>
+<th style="text-align:right">max score</th>
+<th style="text-align:right">min score</th>
+<th style="text-align:right">median score</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align:right">0</td>
-<td style="text-align:left">(38.746552975793826, -90.32366958934445)</td>
-<td style="text-align:right">21.9341</td>
+<td style="text-align:left">1652 Meadowcrest Lane</td>
+<td style="text-align:right">8.63154</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">4.59358</td>
 </tr>
 <tr>
 <td style="text-align:right">1</td>
-<td style="text-align:left">(38.73228422884455, -90.23796506296235)</td>
-<td style="text-align:right">18.5819</td>
+<td style="text-align:left">SSM Physician Parking Fish Hatchery Road</td>
+<td style="text-align:right">27.3281</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">20.3445</td>
 </tr>
 <tr>
 <td style="text-align:right">2</td>
-<td style="text-align:left">(38.67320549137285, -90.26337385384753)</td>
-<td style="text-align:right">20.3912</td>
+<td style="text-align:left">Sheboygan-Segoe Sheboygan Avenue</td>
+<td style="text-align:right">32.3336</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">24.2205</td>
 </tr>
 <tr>
 <td style="text-align:right">3</td>
-<td style="text-align:left">(38.62526994097163, -90.10676075888955)</td>
-<td style="text-align:right">15.4586</td>
+<td style="text-align:left">7109 Colony Drive</td>
+<td style="text-align:right">12.7064</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">7.91297</td>
 </tr>
 <tr>
 <td style="text-align:right">4</td>
-<td style="text-align:left">(38.553566414916084, -90.17747677561692)</td>
-<td style="text-align:right">5.5337</td>
+<td style="text-align:left">Nevin Springs State Fishery and Wildlife Area Cahill Main</td>
+<td style="text-align:right">4.52522</td>
+<td style="text-align:right">0</td>
 <td style="text-align:right">0</td>
 </tr>
 <tr>
 <td style="text-align:right">5</td>
-<td style="text-align:left">(38.74922605851386, -90.20346081153258)</td>
-<td style="text-align:right">12.2374</td>
+<td style="text-align:left">American Family Insurance Madison</td>
+<td style="text-align:right">1.82843</td>
+<td style="text-align:right">0</td>
 <td style="text-align:right">0</td>
 </tr>
 <tr>
 <td style="text-align:right">6</td>
-<td style="text-align:left">(38.699066460086975, -90.25582323640651)</td>
-<td style="text-align:right">8.60969</td>
+<td style="text-align:left">4147 Terminal Drive</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">0</td>
 <td style="text-align:right">0</td>
 </tr>
 <tr>
 <td style="text-align:right">7</td>
-<td style="text-align:left">(38.71368054319952, -90.32688905199662)</td>
-<td style="text-align:right">12.7927</td>
+<td style="text-align:left">2998 Columbia Road</td>
+<td style="text-align:right">31.7218</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">26.2291</td>
 </tr>
 <tr>
 <td style="text-align:right">8</td>
-<td style="text-align:left">(38.61458240297301, -90.27222035993542)</td>
-<td style="text-align:right">10.0945</td>
+<td style="text-align:left">9375 Spirit Street</td>
 <td style="text-align:right">0</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li>30 min run (high) (Time Taken: 75.69375801086426:
-<img src="stlouis_high.png" alt="alt text"></li>
-</ul>
-<table>
-<thead>
-<tr>
-<th style="text-align:right"></th>
-<th style="text-align:left">label</th>
-<th style="text-align:right">max coverage</th>
-<th style="text-align:right">min coverage</th>
-</tr>
-</thead>
-<tbody>
-<tr>
 <td style="text-align:right">0</td>
-<td style="text-align:left">(38.653449080130734, -90.30491590026699)</td>
-<td style="text-align:right">41.4912</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">1</td>
-<td style="text-align:left">(38.59105671485263, -90.27665443610043)</td>
-<td style="text-align:right">37.6306</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">2</td>
-<td style="text-align:left">(38.6397371209948, -90.33661872147931)</td>
-<td style="text-align:right">15.7728</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">3</td>
-<td style="text-align:left">(38.64673791210517, -90.30980061054092)</td>
-<td style="text-align:right">24.3654</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">4</td>
-<td style="text-align:left">(38.646968239007855, -90.33532779707863)</td>
-<td style="text-align:right">21.7613</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">5</td>
-<td style="text-align:left">(38.649533395108314, -90.2968382927907)</td>
-<td style="text-align:right">47.0731</td>
-<td style="text-align:right">0</td>
-</tr>
-</tbody>
-</table>
-<h3 id="minneapolis-minnesota"><em>Minneapolis, Minnesota</em></h3>
-<p><img src="minneapolis_routes.png" alt="alt text">
-<img src="Minneapolis_startpoints.png" alt="alt text"></p>
-<ul>
-<li>30 min run (low) (Time Taken: 692.3481):
-<img src="minneapolist_startpoint_low.png" alt="alt text"></li>
-</ul>
-<table>
-<thead>
-<tr>
-<th style="text-align:right"></th>
-<th style="text-align:left">label</th>
-<th style="text-align:right">max coverage</th>
-<th style="text-align:right">min coverage</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right">0</td>
-<td style="text-align:left">(44.820852518773165, -93.27007526760357)</td>
-<td style="text-align:right">20.7171</td>
-<td style="text-align:right">5.09551</td>
-</tr>
-<tr>
-<td style="text-align:right">1</td>
-<td style="text-align:left">(45.03698099490727, -93.3273018807822)</td>
-<td style="text-align:right">9.2023</td>
-<td style="text-align:right">0.0125046</td>
-</tr>
-<tr>
-<td style="text-align:right">2</td>
-<td style="text-align:left">(45.07520646479199, -93.36447314869748)</td>
-<td style="text-align:right">10.0767</td>
-<td style="text-align:right">2.22048</td>
-</tr>
-<tr>
-<td style="text-align:right">3</td>
-<td style="text-align:left">(45.14351172737558, -93.26887266443758)</td>
-<td style="text-align:right">19.212</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">4</td>
-<td style="text-align:left">(45.01564156164276, -93.37466650992579)</td>
-<td style="text-align:right">12.282</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">5</td>
-<td style="text-align:left">(45.07391882519973, -93.26580601973103)</td>
-<td style="text-align:right">16.7926</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">6</td>
-<td style="text-align:left">(45.04092052687533, -93.26546083324378)</td>
-<td style="text-align:right">22.8279</td>
-<td style="text-align:right">1.27266</td>
-</tr>
-<tr>
-<td style="text-align:right">7</td>
-<td style="text-align:left">(44.84429728444731, -93.24484777443656)</td>
-<td style="text-align:right">30.9313</td>
-<td style="text-align:right">2.27534</td>
-</tr>
-<tr>
-<td style="text-align:right">8</td>
-<td style="text-align:left">(44.90964204554468, -93.4073130057834)</td>
-<td style="text-align:right">16.2539</td>
-<td style="text-align:right">5.93796</td>
-</tr>
-<tr>
-<td style="text-align:right">9</td>
-<td style="text-align:left">(44.99941607025379, -93.05624081015259)</td>
-<td style="text-align:right">4.16197</td>
-<td style="text-align:right">0</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li>30 min run (high) (Time Taken: 749.7002):
-<img src="minneapolist_startpoint_high.png" alt="alt text"></li>
-</ul>
-<table>
-<thead>
-<tr>
-<th style="text-align:right"></th>
-<th style="text-align:left">label</th>
-<th style="text-align:right">max coverage</th>
-<th style="text-align:right">min coverage</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right">0</td>
-<td style="text-align:left">(44.96694574782479, -93.27932464626308)</td>
-<td style="text-align:right">57.0185</td>
-<td style="text-align:right">25.6812</td>
-</tr>
-<tr>
-<td style="text-align:right">1</td>
-<td style="text-align:left">(44.9908438111097, -93.24767264600557)</td>
-<td style="text-align:right">65.5928</td>
-<td style="text-align:right">31.7399</td>
-</tr>
-<tr>
-<td style="text-align:right">2</td>
-<td style="text-align:left">(44.96096525625919, -93.24283547951629)</td>
-<td style="text-align:right">78.2006</td>
-<td style="text-align:right">36.8776</td>
-</tr>
-<tr>
-<td style="text-align:right">3</td>
-<td style="text-align:left">(44.964202774732755, -93.2647555237972)</td>
-<td style="text-align:right">40.1659</td>
-<td style="text-align:right">24.8669</td>
-</tr>
-<tr>
-<td style="text-align:right">4</td>
-<td style="text-align:left">(44.96872234263041, -93.25058726230623)</td>
-<td style="text-align:right">100.084</td>
-<td style="text-align:right">51.7553</td>
-</tr>
-<tr>
-<td style="text-align:right">5</td>
-<td style="text-align:left">(44.976190237605174, -93.25424267826821)</td>
-<td style="text-align:right">79.3079</td>
-<td style="text-align:right">31.1294</td>
-</tr>
-<tr>
-<td style="text-align:right">6</td>
-<td style="text-align:left">(44.973751479498084, -93.27271856402542)</td>
-<td style="text-align:right">109.342</td>
-<td style="text-align:right">64.0048</td>
-</tr>
-</tbody>
-</table>
-<h3 id="lansing-michigan"><em>Lansing, Michigan</em></h3>
-<p><img src="lansing_routes.jpg" alt="alt text"></p>
-<!-- ![alt text][lansing_startpoints] -->
-<ul>
-<li>30 min run (low) (Time Taken: 113.42274689674377):
-<img src="lansing_low.png" alt="alt text"></li>
-</ul>
-<table>
-<thead>
-<tr>
-<th style="text-align:right"></th>
-<th style="text-align:left">label</th>
-<th style="text-align:right">max coverage</th>
-<th style="text-align:right">min coverage</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:right">0</td>
-<td style="text-align:left">(42.69552749899424, -84.59724385814187)</td>
-<td style="text-align:right">4.8206</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">1</td>
-<td style="text-align:left">(42.678903862848266, -84.59248159369493)</td>
-<td style="text-align:right">10.7233</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">2</td>
-<td style="text-align:left">(42.70093874047502, -84.5972371795897)</td>
-<td style="text-align:right">0.281388</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">3</td>
-<td style="text-align:left">(42.7007910840444, -84.5572856246274)</td>
-<td style="text-align:right">13.6892</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">4</td>
-<td style="text-align:left">(42.677790726888496, -84.57890510682235)</td>
-<td style="text-align:right">8.0564</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">5</td>
-<td style="text-align:left">(42.69182814771287, -84.61354679022507)</td>
-<td style="text-align:right">12.9615</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">6</td>
-<td style="text-align:left">(42.68622809427853, -84.56495335422156)</td>
-<td style="text-align:right">21.0822</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">7</td>
-<td style="text-align:left">(42.67809941765349, -84.5682437067551)</td>
-<td style="text-align:right">6.51761</td>
-<td style="text-align:right">0</td>
-</tr>
-<tr>
-<td style="text-align:right">8</td>
-<td style="text-align:left">(42.71365682127145, -84.53426523200933)</td>
-<td style="text-align:right">12.0191</td>
 <td style="text-align:right">0</td>
 </tr>
 <tr>
 <td style="text-align:right">9</td>
-<td style="text-align:left">(42.70780457246975, -84.56169111850734)</td>
-<td style="text-align:right">17.3991</td>
+<td style="text-align:left">6179 Research Park Boulevard</td>
+<td style="text-align:right">22.2021</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">16.9148</td>
 </tr>
 </tbody>
 </table>
+<img align="center" src="madison_high.png" alt="madison_high" width="800" height="400">
 <ul>
-<li>30 min run (high) (Time Taken: 128.57801747322083:
-<img src="lansing_high.png" alt="alt text"></li>
+<li>The ten census centroids with the lowest service scores:</li>
 </ul>
 <table>
 <thead>
 <tr>
 <th style="text-align:right"></th>
 <th style="text-align:left">label</th>
-<th style="text-align:right">max coverage</th>
-<th style="text-align:right">min coverage</th>
+<th style="text-align:right">max score</th>
+<th style="text-align:right">min score</th>
+<th style="text-align:right">median score</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align:right">0</td>
-<td style="text-align:left">(42.70154967243691, -84.5492375391658)</td>
-<td style="text-align:right">20.9791</td>
+<td style="text-align:left">465 Davies Street</td>
+<td style="text-align:right">10.6045</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">3.78525</td>
 </tr>
 <tr>
 <td style="text-align:right">1</td>
-<td style="text-align:left">(42.7089628139353, -84.54494465393294)</td>
-<td style="text-align:right">20.8449</td>
+<td style="text-align:left">2133 Keyes Avenue</td>
+<td style="text-align:right">25.6982</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">19.2128</td>
 </tr>
 <tr>
 <td style="text-align:right">2</td>
-<td style="text-align:left">(42.700336171040526, -84.54284497805143)</td>
-<td style="text-align:right">18.501</td>
+<td style="text-align:left">410 Pawling Street</td>
+<td style="text-align:right">19.2096</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">17.8433</td>
 </tr>
 <tr>
 <td style="text-align:right">3</td>
-<td style="text-align:left">(42.71004236075822, -84.40608454957669)</td>
-<td style="text-align:right">13.3966</td>
+<td style="text-align:left">3907 Hynek Road</td>
+<td style="text-align:right">16.9268</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">16.0026</td>
 </tr>
 <tr>
 <td style="text-align:right">4</td>
-<td style="text-align:left">(42.689978589189316, -84.54221142906732)</td>
-<td style="text-align:right">17.8532</td>
+<td style="text-align:left">770 Lamont Lane</td>
+<td style="text-align:right">9.77114</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">4.24737</td>
 </tr>
 <tr>
 <td style="text-align:right">5</td>
-<td style="text-align:left">(42.7650948183785, -84.49947250001442)</td>
-<td style="text-align:right">22.0433</td>
+<td style="text-align:left">1196 Rowell Street</td>
+<td style="text-align:right">27.3281</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">6.3546</td>
 </tr>
 <tr>
 <td style="text-align:right">6</td>
-<td style="text-align:left">(42.72571904933564, -84.45452833285272)</td>
-<td style="text-align:right">22.7038</td>
+<td style="text-align:left">1891 Elka Lane</td>
+<td style="text-align:right">14.2808</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">6.92799</td>
 </tr>
 <tr>
 <td style="text-align:right">7</td>
-<td style="text-align:left">(42.73088680199716, -84.47358345971233)</td>
-<td style="text-align:right">38.1766</td>
+<td style="text-align:left">University of Wisconsin Arboretum - Grady Tract Kirkwall Street</td>
+<td style="text-align:right">11.5327</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">4.8177</td>
 </tr>
 <tr>
 <td style="text-align:right">8</td>
-<td style="text-align:left">(42.729934705198126, -84.46865888239998)</td>
-<td style="text-align:right">44.6854</td>
+<td style="text-align:left">5498 Regent Street</td>
+<td style="text-align:right">17.4869</td>
 <td style="text-align:right">0</td>
+<td style="text-align:right">12.7752</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">Odana Hills Golf Course 4635</td>
+<td style="text-align:right">19.0319</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">5.89037</td>
 </tr>
 </tbody>
 </table>
-<!-- * 30 min run (Time Taken: 73.83022403717041):
-  * Max coverage of **a week**, unit: $km^2$
-    * Michigan State Capitol: $56.001443$
-    * Potter Park Zoo: $12.201751$
-    * Lansing Christian High School:  $5.780915$
-  * Min coverage of **a week**, unit: $km^2$
-    * Michigan State Capitol: $23.514244$
-    * Potter Park Zoo: $1.470077$
-    * Lansing Christian High School:  $0.621025$
-![alt text][lansing_short]
-
-* 90 min run (Time Taken: 398.38797783851624):
-  * Max coverage of **a week**, unit: $km^2$
-    * Michigan State Capitol: $218.005403$
-    * Potter Park Zoo: $144.727143$
-    * Lansing Christian High School:  $133.52313$
-  * Min coverage of **a week**, unit: $km^2$
-    * Michigan State Capitol: $14.579151$
-    * Potter Park Zoo: $0.056625$
-    * Lansing Christian High School:  $15.419283$
-![alt text][lansing_long] -->
+<img align="center" src="madison_low.png" alt="madison_low" width="800" height="400">
+<ul>
+<li>
+<p>Based on the two graphs above, we can see that no matter if a person resides in a census block with a lot of services or a census block with not so many services, they both can reach similar level of services. This is due to the highest scores for the two graphs are about the same which is around 30. The max score for the high census block graph is about 32 while the max score for the low census block graph is about 27.33. It shows that the services of the Madison is advanced enough for people from not only high score census but only the low score census to reach services. However, people from high score census blocks still can reach more services than people from low score census blocks if they take buses.</p>
+</li>
+<li>
+<p>The visualization of the Madison census:</p>
+</li>
+</ul>
+<img align="center" src="visual_madison.png" alt="visual_madison" width="800" height="400">
+<ul>
+<li>From the heat map, we can see that the census blocks corresponding with the highest service score is near the Capitol Square in downtown Madison and the highest service score is over 40. This concetration of census blocks with high services score around downtown Madison is extremely similar to the concentration of bus routes around downtown Madison.</li>
+</ul>
+<h4 id="st-louis-missouri"><strong>St. Louis, Missouri</strong></h4>
+<ul>
+<li>
+<p>Overview of St. Louis routes network</p>
+<ul>
+<li>Here is an overview of all the bus routes in St. Louis, MO:</li>
+</ul>
+<img align="center" src="stlouis_routes.jpg" alt="stlouis_routes" width="600" height="400">
+</li>
+<li>
+<p>The ten census centroids with the highest service scores:</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max score</th>
+<th style="text-align:right">min score</th>
+<th style="text-align:right">median score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">Chippewa at Regal Place Chippewa Street</td>
+<td style="text-align:right">14.1783</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">11.1506</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">Lansdowne at Chippewa Lansdowne Avenue</td>
+<td style="text-align:right">10.2808</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">9.58429</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">6000 Lansdowne Avenue</td>
+<td style="text-align:right">15.7129</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">9.66561</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">5406 Wise Avenue</td>
+<td style="text-align:right">16.7857</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">4.28971</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">528 South Sarah Street</td>
+<td style="text-align:right">30.3576</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">23.9757</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">4444 Forest Park Avenue</td>
+<td style="text-align:right">33.9023</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">26.8917</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">Grant Medical Clinic 114</td>
+<td style="text-align:right">26.8042</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">17.4304</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">Saint Nicholas Greek Orthodox Church 4967</td>
+<td style="text-align:right">34.7062</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">26.5922</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">6254 Mardel Avenue</td>
+<td style="text-align:right">15.8627</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">9.66561</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">Tai Chi Single Whip Market Street</td>
+<td style="text-align:right">27.2854</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">17.9747</td>
+</tr>
+</tbody>
+</table>
+<img align="center" src="stlouis_high.png" alt="stlouis_high" width="800" height="400">
+<ul>
+<li>The ten census centroids with the lowest service scores:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max score</th>
+<th style="text-align:right">min score</th>
+<th style="text-align:right">median score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">5405 Holly Hills Avenue</td>
+<td style="text-align:right">16.2578</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">12.5369</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">5424 Hancock Avenue</td>
+<td style="text-align:right">14.6404</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">9.39296</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">4318 Potomac Street</td>
+<td style="text-align:right">15.1025</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">9.23367</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">3640 Hydraulic Avenue</td>
+<td style="text-align:right">30.8899</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">19.4305</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">4809 Kossuth Avenue</td>
+<td style="text-align:right">10.6761</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">3.38009</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">4530 Lexington Avenue</td>
+<td style="text-align:right">11.6687</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">2.54164</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">Gibson Avenue McRee Place</td>
+<td style="text-align:right">31.8228</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">19.7903</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">3626 Aldine Avenue</td>
+<td style="text-align:right">31.9559</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">17.9834</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">3146 Locust Street</td>
+<td style="text-align:right">20.0343</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">14.3896</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">1630 Hickory Street</td>
+<td style="text-align:right">24.2817</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">17.4926</td>
+</tr>
+</tbody>
+</table>
+<img align="center" src="stlouis_low.png" alt="stlouis_low" width="800" height="400">
+<ul>
+<li>
+<p>Based on the two graphs above, we can see that no matter if a person resides in a census block with a lot of services or a census block with not so many services, they both can reach similar level of services. This is due to the highest scores for the two graphs are about the same which is around 30. The max score for the high score census blocks is about 34.71 while the max score for the low score census block is about 31.96. It shows that the service system of the St. Louis is advanced enough for people from not only high score census but only the low score census to reach good level of services. However, people from high score census blocks still can reach more services than people from low score census blocks if they take buses.</p>
+</li>
+<li>
+<p>The visualization of the St. Louis census:</p>
+</li>
+</ul>
+<img align="center" src="visual_stlouis.png" alt="visual_stlouis" width="500" height="650">
+<ul>
+<li>From the heat map, we can see that the census blocks corresponding with the highest service score is in the central of the city and the highest service score is over 30.</li>
+</ul>
+<h4 id="minneapolis-minnesota"><strong>Minneapolis, Minnesota</strong></h4>
+<ul>
+<li>
+<p>Overview of Minneapolis routes network
+Here is an overview of all the bus routes in Minneapolis, MN:</p>
+<img align="center" src="minneapolis_routes.png" alt="minneapolis_routes" width="800" height="400">
+</li>
+<li>
+<p>The ten census centroids with the highest service scores:</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max score</th>
+<th style="text-align:right">min score</th>
+<th style="text-align:right">median score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">Aramsco 650</td>
+<td style="text-align:right">33.666</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">23.7619</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">East River Road Garage 385</td>
+<td style="text-align:right">47.1004</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">35.2929</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">Creamette Lofts North 1st Street</td>
+<td style="text-align:right">56.6103</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">39.1382</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">Red Building South 7th Street</td>
+<td style="text-align:right">66.1495</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">55.2971</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">St Catherine University 601</td>
+<td style="text-align:right">54.466</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">40.305</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">The Bridgewater 1010</td>
+<td style="text-align:right">63.7767</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">48.37</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">Dupont Avenue Bridge Midtown Corridor</td>
+<td style="text-align:right">51.559</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">36.3442</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">Argyle House 920</td>
+<td style="text-align:right">45.9418</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">34.0628</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">Xcel Energy Nicollet Mall</td>
+<td style="text-align:right">71.4414</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">61.5604</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">AT&amp;T Tower Marquette Avenue South</td>
+<td style="text-align:right">73.2675</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">61.2384</td>
+</tr>
+</tbody>
+</table>
+<img align="center" src="minneapolis_high.png" alt="minneapolis_high" width="800" height="400">
+<ul>
+<li>The ten census centroids with the lowest service scores:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max score</th>
+<th style="text-align:right">min score</th>
+<th style="text-align:right">median score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">3507 West 43rd Street</td>
+<td style="text-align:right">24.3569</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">8.2247</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">Kings Highway East Harriet</td>
+<td style="text-align:right">37.2356</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">19.6234</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">1617 North Hillside Avenue</td>
+<td style="text-align:right">22.0407</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">14.2981</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">5142 North Logan Avenue</td>
+<td style="text-align:right">8.30602</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">1.52655</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">Target 1650</td>
+<td style="text-align:right">29.2729</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">16.5574</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">2123 25th Avenue South</td>
+<td style="text-align:right">54.466</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">34.6889</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">Band Box East 14th Street</td>
+<td style="text-align:right">63.2366</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">48.4055</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">1015 4th Avenue North</td>
+<td style="text-align:right">47.2459</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">25.3748</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">1086 West 49th Street</td>
+<td style="text-align:right">37.9288</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">20.2107</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">10 Russell Court</td>
+<td style="text-align:right">23.345</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">9.6007</td>
+</tr>
+</tbody>
+</table>
+<img align="center" src="mineapolis_low.png" alt="minneapolis_low" width="800" height="400">
+<ul>
+<li>
+<p>Based on the above two graphs, the highest max score for the high census is about 73.27 while the highest max score for the low census is about 63.24. The overall score of Minneapolis is twice as high as other three cities' score, so Mineapolis has a great service reachability. It shows that the service system of the Mineapolis is advanced enough for people from both high score census and the low score census to reach services. But high census still have more services to choose through bus transit overall because the max median score of the high census is about 13 higher than the low census.</p>
+</li>
+<li>
+<p>The visualization of the Minneapolis census:</p>
+</li>
+</ul>
+<img align="center" src="visual_minneapolist.png" alt="visual_minneapolis" width="500" height="650">
+<ul>
+<li>From the heat map, we can see that the census blocks corresponding with the highest service score is in the central of the city and the highest service score is over 60. This concentration of census blocks with high services score in the central of the city is extremely similar to the concentration of bus routes in the central of the city.</li>
+</ul>
+<h4 id="lansing-michigan"><strong>Lansing, Michigan</strong></h4>
+<ul>
+<li>
+<p>Overview of Lansing routes network
+Here is an overview of all the bus routes in Lansing, MI:</p>
+<img align="center" src="lansing_routes.jpg" alt="lansing_routes" width="600" height="400">
+</li>
+<li>
+<p>The ten census centroids with the highest service scores:</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max score</th>
+<th style="text-align:right">min score</th>
+<th style="text-align:right">median score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">Friedland Industries, Inc. 405</td>
+<td style="text-align:right">5.88468</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">4.19885</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">Waycross Drive Marscot</td>
+<td style="text-align:right">9.9608</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">6.40661</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">198 Bingham Street</td>
+<td style="text-align:right">13.4466</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">11.9105</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">6363 Gardenia Avenue</td>
+<td style="text-align:right">8.42471</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">6.40661</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">South Lansing Pathway Kaynorth</td>
+<td style="text-align:right">7.09978</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">5.36684</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">731 North Martin Luther King Jr Boulevard</td>
+<td style="text-align:right">4.11753</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">3.04355</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">Knapp's Center West Washtenaw Street</td>
+<td style="text-align:right">13.6776</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">10.5743</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">718 East Cavanaugh Road</td>
+<td style="text-align:right">10.0421</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">6.17555</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">Conrad's Grill Morgan Lane</td>
+<td style="text-align:right">7.03997</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">3.78525</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">Goodtime Motors Inc Auto Wholesalers Keystone Avenue</td>
+<td style="text-align:right">9.58001</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">4.98605</td>
+</tr>
+</tbody>
+</table>
+<img align="center" src="lansing_high.png" alt="lansing_high" width="800" height="400">
+<ul>
+<li>The ten census centroids with the lowest service scores:</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:right"></th>
+<th style="text-align:left">label</th>
+<th style="text-align:right">max score</th>
+<th style="text-align:right">min score</th>
+<th style="text-align:right">median score</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right">0</td>
+<td style="text-align:left">427 Seymour Avenue</td>
+<td style="text-align:right">13.6776</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">10.2931</td>
+</tr>
+<tr>
+<td style="text-align:right">1</td>
+<td style="text-align:left">6498 Coulson Court</td>
+<td style="text-align:right">7.5619</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">6.40661</td>
+</tr>
+<tr>
+<td style="text-align:right">2</td>
+<td style="text-align:left">1453 Lyons Avenue</td>
+<td style="text-align:right">8.06381</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">7.00415</td>
+</tr>
+<tr>
+<td style="text-align:right">3</td>
+<td style="text-align:left">1444 Knollwood Avenue</td>
+<td style="text-align:right">3.96779</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">3.73673</td>
+</tr>
+<tr>
+<td style="text-align:right">4</td>
+<td style="text-align:left">1417 North Jenison Avenue</td>
+<td style="text-align:right">4.11753</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">2.58144</td>
+</tr>
+<tr>
+<td style="text-align:right">5</td>
+<td style="text-align:left">202 South Clemens Avenue</td>
+<td style="text-align:right">13.4466</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">4.70949</td>
+</tr>
+<tr>
+<td style="text-align:right">6</td>
+<td style="text-align:left">424 West Hodge Avenue</td>
+<td style="text-align:right">6.63767</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">2.54164</td>
+</tr>
+<tr>
+<td style="text-align:right">7</td>
+<td style="text-align:left">1449 West Ionia Street</td>
+<td style="text-align:right">5.50388</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">2.11932</td>
+</tr>
+<tr>
+<td style="text-align:right">8</td>
+<td style="text-align:left">Forest Road Lansing</td>
+<td style="text-align:right">2.87231</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">2.41019</td>
+</tr>
+<tr>
+<td style="text-align:right">9</td>
+<td style="text-align:left">I 96 Lansing</td>
+<td style="text-align:right">7.33084</td>
+<td style="text-align:right">0</td>
+<td style="text-align:right">5.48237</td>
+</tr>
+</tbody>
+</table>
+<img align="center" src="lansing_low.png" alt="lansing_low" width="800" height="400">
+<p>Based on the two graphs above, we can see that no matter if a person resides in a census block with a lot of services or a census block with not so many services, they both can reach similar level of services. This is due to the highest scores for the two graphs are about the same which is around 13.s. The max score for the high census is about 13.67 while the max score for the low census is about 13.45. It shows that the service system of the Lansing is fair for people from both high score census and the low score census to reach services. The score of high census and low census for Lansing is almost equal, while other three cities have some difference. One possible reason is the Lansing has smaller area where bus transit could get destination easier.</p>
+<ul>
+<li>The visualization of the lansing census:</li>
+</ul>
+<img align="center" src="visual_lansing.png" alt="visual_lansing" width="700" height="550">
+<ul>
+<li>From the heat map, we can see that the census blocks corresponding with the highest service score is in the central of the city and the highest service score is over 10. This concentration of census blocks with high services score in the central of the city is extremely similar to the concentration of bus routes in the central of the city.</li>
+</ul>
+<hr>
+<h2 id="part-3-conclusions-and-future-prospects"><strong>Part 3: Conclusions and Future Prospects</strong></h2>
+<ul>
+<li>Comparing four cities' score vs. time figures, we can see that Minneapolis and St. Louis have about the same service scores on weekdays and weekends, while Madison and Lansing have smaller service scores on weekends than weekdays. More interestingly, Minneapolis has higher score during Monday, while St. Louis has slightly higher score on weekends than weekdays. People living in Minneapolis would like to take bus more on Monday, and residents are more active and go out more on weekends in St. Louis.</li>
+<li>Future Ideas:
+<ul>
+<li>Finding a better algorithm to do the graph search, right now the bus simulator got slow down significantly when elapsed time is over 30 min.</li>
+<li>Expands the use of bus simulator to other country</li>
+<li>Building more abstraction on method calling.
+<ul>
+<li>Some hard coding is used when drawing graphs, and calculating scores</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
 
 </body>
 </html>

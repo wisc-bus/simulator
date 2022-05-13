@@ -20,7 +20,7 @@ class LocalManager(BaseManager):
         start_points = config.get_start_points()
 
         result_df = pd.DataFrame(columns=["geometry", "start_time", "map_identifier"])
-        print(perf_df)
+        # print(perf_df)
 
         with tqdm(total=len(start_times) * len(start_points)) as progress_bar:
             idx = 0
