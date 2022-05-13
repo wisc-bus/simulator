@@ -1,21 +1,11 @@
-# Presentation
-
-fix: font size
-     better x, y label
-     running for whole week of SCanalyzer
+# Final Report: Analyzing Services for Madison, St.Louis, Minneapolis, and Lansing
 
 
-More on performance
+<img src="tester_results.png" alt="tester_results" width="600" height="150">
 
-show service plot color based on services score
-
-
-Compare 
-
-[tester_results]:tester_results.png
-
-[perf_short]: perf_short.png
+<img src="perf_short.png" alt="perf_short" width="600" height="250">
 [perf_long]: perf_long.png
+<img src="tester_results.png" alt="tester_results" width="600" height="400">
 
 [madison_short]: madison_short.png
 [madison_long]: madison_long.png
@@ -46,6 +36,22 @@ Compare
 [lansing_startpoints]:Lansing_startpoints.png
 [lansing_high]:lansing_high.png
 [lansing_low]:lansing_low.png
+**
+
+## **Introduction**
+  For this project, we would like to understand how different services (banks, clinics, dentistries, hospitals, and supermarkets) are distributed in a city and whether people can reach to the same level of services when they take buses. Take Madison as an example, among all the two hundred fifty thousand people living in different census blocks in Madison, how do we know whether anyone from any census blocks can get to the same level of services when they take buses. Services are distributed well in a city if anyone from any place can reach to the asme level of services when they take buses. In this project, we take four different 
+
+#### **Service Score Calculation:**
+  To measure the 
+
+  We are interested in comparing the coverage of services for high score census and low score census through bus transit.
+
+
+
+* Minneapolis
+  <img src="minneapolis_routes.png" alt="minneapolis_routes" width="600" height="400">
+* Lansing
+  <img src="lansing_routes.jpg" alt="lansing_routes" width="600" height="400">
 
 ## **Part 1: Code quality improvements**
 * Fixes
@@ -64,31 +70,26 @@ Compare
     * Below is the graph when the elapse time is long (90min), we can see that the original version is much faster
 ![alt text][perf_long]
 ---
-## **Part 2: 4 City Analysis**
 
-### How score is calculated:
+## **Part 2: Four City Analysis**
+
+### **Service Score Calculation**
 
 * The score is an additional field which can be use to calculate the how good basic services infrastructure is in an area. This function is being used for each census block within a city to find the lowest scores and highest scores of the census block within that city. Then BusSim can be used to calculated the area coverage of that block
 ```
-def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0):
-    x6 = 1
-    if banks == 0:
-        x6 = x6/2
-    if supermarkets == 0:
-        x6 = x6/2
-    if hospitals == 0:
-        x6 = x6/2
-    if clinics == 0:
-        x6 = x6/2
-    if dentists == 0:
-        x6 = x6/2
-    score = (area + banks + clinics + hospitals + dentists + supermarkets) * x6
+def get_sigmoid(x):
+    return 1/(1+math.e**(-x))
+
+def get_score(area, banks=0, clinics=0, dentists=0,   hospitals=0, supermarkets=0):
+    score = get_sigmoid(banks) + get_sigmoid(clinics) + get_sigmoid(hospitals) + get_sigmoid(dentists) + get_sigmoid(supermarkets)
     return score
 ```
 
 
-### *Madison, Wisconsin*
-
+### **Madison, Wisconsin**
+* Introduction to Madison routes network
+  <img src="madison_routes.png" alt="madison_routes" width="600" height="400">
+  In madison, the route network focuses on Capitol Square in downtown Madison.
 <!-- ![alt text][madison_start_points] -->
 * Madison running result from low score points, time taken = *174.4922sec*:
 
@@ -127,8 +128,10 @@ def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0)
 
 
 
-### *St. Louis, Missouri*
-![alt text][stlouis_routes]
+### **St. Louis, Missouri**
+* Introduction to St. Louis routes network
+  <img src="stlouis_routes.jpg" alt="stlouis_routes" width="600" height="400">
+  In St. Louis, the route network focuses on
 
 <!-- ![alt text][stlouis_startpoints] -->
 
@@ -160,7 +163,7 @@ def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0)
 |  4 | (38.646968239007855, -90.33532779707863) |        21.7613 |              0 |
 |  5 | (38.649533395108314, -90.2968382927907)  |        47.0731 |              0 |
 
-### *Minneapolis, Minnesota*
+### **Minneapolis, Minnesota**
 ![alt text][minneapolis_routes]
 ![alt text][minneapolis_startpoints]
 
@@ -195,7 +198,7 @@ def get_score(area, banks=0, clinics=0, dentists=0, hospitals=0, supermarkets=0)
 
 
 
-### *Lansing, Michigan*
+### **Lansing, Michigan**
 ![alt text][lansing_routes]
 
 <!-- ![alt text][lansing_startpoints] -->
