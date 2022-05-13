@@ -1,6 +1,6 @@
 from .busSim.manager import managerFactory
 from .result.searchResult import SearchResult
-from .util import gen_start_time, transform
+from .util import gen_start_time, transform, findEPSG
 from .gtfs_edit import copy_with_edits
 from .service.yelp import get_results
 from .census import Census
@@ -16,7 +16,7 @@ import os
 from pathlib import Path
 from math import ceil, floor
 from collections import defaultdict
-import time
+import time,math
 
 
 class SCanalyzer:
@@ -83,14 +83,14 @@ class SCanalyzer:
         # Save output:
         demographic_data.to_csv(cache_path, index=False)
 
-        return self._csvdf_to_gdf(demographic_data)
+        return demographic_data
 
     def load_yelp(self, api_key, services=["banks", "clinics", "dentists", "hospitals", "supermarket"], cache=True):
         cache_path = os.path.join(self.base_out_path, "services.csv")
         if cache and os.path.exists(cache_path):
             return pd.read_csv(cache_path)
 
-        dfs = [get_results(api_key, service, self.borders)
+        dfs = [get_results(api_key, service, self.borders, self.epsg)
                for service in services]
         df = pd.concat(dfs)
         df.to_csv(cache_path, index=False)
@@ -111,7 +111,6 @@ class SCanalyzer:
                 y_idx = floor((y - min_y) / grid_size)
                 if x_idx >= 0 and x_idx < x_num and y_idx >= 0 and y_idx < y_num:
                     grid[y_idx][x_idx] += 1
-
             return [grid]
 
         services_grid_series = services_gdf.groupby("service").apply(get_grid)
@@ -201,7 +200,7 @@ class SCanalyzer:
                     df.loc[i, "geometry"] = Polygon(
                         [(x0, y0), (x0, y1), (x1, y1), (x1, y0)])
                     i += 1
-        gdf = gpd.GeoDataFrame(df, crs="EPSG:3174")
+        gdf = gpd.GeoDataFrame(df, crs=self.epsg)
         return gdf
 
     def _get_out_path(self):
@@ -215,29 +214,29 @@ class SCanalyzer:
         self.borders = self._get_borders()
 
     def _reproject_stops(self):
-        with ZipFile(self.gtfs_path) as zf:
-            if "stops-3174.txt" in zf.namelist():
-                return
-            with zf.open("stops.txt") as f:
-                stops_df = pd.read_csv(TextIOWrapper(f), sep=",")
-                transformer = Transformer.from_crs(4326, 3174)
+        with ZipFile(self.gtfs_path, 'a') as zf:
+            stops = None
+            with zf.open('stops.txt') as f:
+                stops = pd.read_csv(TextIOWrapper(f), sep=',')
+                epsg = findEPSG(stops["stop_lat"][0], stops["stop_lon"][0])
+                self.epsg = epsg
+                if 'stops_meter.txt' in zf.namelist():
+                    # print('stops_meter exists')
+                    return
+                transformer = Transformer.from_crs(4326, epsg)
                 stop_x, stop_y = transformer.transform(
-                    stops_df["stop_lat"], stops_df["stop_lon"])
-                stops_df["stop_x"] = stop_x
-                stops_df["stop_y"] = stop_y
-                # TODO change this to a fake file wrapper
-                stops_df.to_csv("stops-3174.txt")
-
-        with ZipFile(self.gtfs_path, "a") as zf:
-            zf.write('stops-3174.txt')
-        os.remove('stops-3174.txt')
+                            stops["stop_lat"], stops["stop_lon"])
+                stops["stop_x"] = stop_x
+                stops["stop_y"] = stop_y
+            zf.writestr('stops_meter.txt', data=stops.to_csv(index=False))
+            # print('zf namelist', zf.namelist())
 
     def _get_borders(self):
         # TODO: optimize
         # 1. combine with previous _reproject_stops to only open the file once
         # 2. these can be computed within one loop
         with ZipFile(self.gtfs_path) as zf:
-            with zf.open("stops-3174.txt") as f:
+            with zf.open("stops_meter.txt") as f:
                 stops_df = pd.read_csv(TextIOWrapper(f), sep=",")
                 max_x = stops_df["stop_x"].max()
                 min_x = stops_df["stop_x"].min()

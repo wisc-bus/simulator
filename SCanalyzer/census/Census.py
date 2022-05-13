@@ -124,6 +124,7 @@ class Census:
             "Getting demographics data from Census.gov, this may take a couple minutes...")
 
         combined_data = []
+        # CensusTracts = CensusTracts[1500:]
 
         if sample:
             CensusTracts = CensusTracts[0:10]
@@ -162,7 +163,6 @@ class Census:
         joined_df = CensusTracts.merge(
             combined_df, on=['TRACT', 'STATE', 'COUNTY', 'BLKGRP'])
 
-        print(type(joined_df))
         # Id the demographics are the defaults then the stats will be computed and added to the geodataframe,
         # if it is not default then the user will have to compute them after the gdf is returned but before it
         # is combined with the results from the simulator

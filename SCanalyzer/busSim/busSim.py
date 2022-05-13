@@ -2,10 +2,10 @@ import pandas as pd
 import geopandas as gpd
 import numpy as np
 from .graph import Graph
-from ..util import transform
+from ..util import findEPSG, transform
 import logging
 from math import ceil, floor, sqrt
-
+import math
 
 class BusSim:
 
@@ -13,7 +13,7 @@ class BusSim:
         self,
         manager,
         day,
-        start_time,
+        start_time, 
         elapse_time,
         avg_walking_speed=1.4,
         max_walking_min=-1,  # HACK
@@ -58,6 +58,10 @@ class BusSim:
                            elapse_time, self.max_walking_distance, avg_walking_speed)
         self._logger.info("Sim successfully initialized")
 
+    #added by charles
+    def clear_graph(self):
+        self.graph._clear_graph()
+
     def get_access_grid(self, start_stop=None, start_point=None, grid_size_min=2, route_remove=[]):
         max_x, min_x, max_y, min_y = self.manager.get_borders()
         x_num, y_num, grid_size = self._get_grid_dimention(grid_size_min)
@@ -78,7 +82,7 @@ class BusSim:
             min_x_idx = floor(
                 (bubble["stop_x"] - min_x - bubble["radius"]) / grid_size)
             max_x_idx = floor(
-                (bubble["stop_x"] - min_x + bubble["radius"]) / grid_size)
+                 (bubble["stop_x"] - min_x + bubble["radius"]) / grid_size)
             min_y_idx = floor(
                 (bubble["stop_y"] - min_y - bubble["radius"]) / grid_size)
             max_y_idx = floor(
@@ -105,7 +109,9 @@ class BusSim:
 
         self._logger.info("Finish generating grid")
         return grid
+    
 
+    
     def get_gdf(self, start_stop=None, start_point=None, route_remove=[]):
         """Given a starting point(lat, lon) or a starting stop_id, compute the region covered in geopandas.Geodataframe
 
@@ -120,24 +126,24 @@ class BusSim:
 
         """
         self._logger.info("Start searching graph")
-
+        start_latlon=start_point
         # first convert start_point into meters
         if start_point is not None:
             start_point = transform(start_point[0], start_point[1])
-        stops_radius_list = self.graph.search(
-            start_stop, start_point, route_remove)
+            self.stops_radius_list = self.graph.search(start_stop, start_point, route_remove)
 
-        if stops_radius_list is None or len(stops_radius_list) == 0:
+        if self.stops_radius_list is None or len(self.stops_radius_list) == 0:
             return
 
         self._logger.debug("start generating gdf")
-        df = pd.DataFrame(stops_radius_list)
+        df = pd.DataFrame(self.stops_radius_list)
 
+        epsg=str(findEPSG(start_latlon[0],start_latlon[1]))
         gdf = gpd.GeoDataFrame(
-            df, geometry=gpd.points_from_xy(df.stop_x, df.stop_y), crs="EPSG:3174")
-
+            df, geometry=gpd.points_from_xy(df.stop_x, df.stop_y), crs="EPSG:"+epsg)
+        #EPSG:3174
         self._logger.debug("start generating geometry buffer with radius")
-        gdf['geometry'] = gdf.geometry.buffer(gdf['radius'])
+        gdf['geometry'] = gdf.geometry.buffer(gdf['radius']) # draw bubble with the given radius
         self._logger.info("Finish generating gdf")
         return gdf
 
@@ -165,7 +171,14 @@ class BusSim:
     def _gen_final_df(self, trip_delays):
         self._logger.debug("Start generating dataframe")
 
-        stops_df = self.manager.read_gtfs("stops-3174.txt")
+        stops_df = self.manager.read_gtfs("stops_meter.txt")
+        # for i in range(len(stops_df)):
+        #     x,y = transform(float(stops_df.iloc[i]['stop_lat']), float(stops_df.iloc[i]['stop_lon']))
+        #     #print(f"lat = {float(stops_df.iloc[i]['stop_lat'])}, lon = {float(stops_df.iloc[i]['stop_lon'])}")
+        #     #print(f'x = {x}, y = {y}')
+        #     stops_df.at[i,'stop_x'] = x
+        #     stops_df.at[i,'stop_y'] = y
+        # print(f'new Stops df {stops_df}')
         trips_df = self.manager.read_gtfs("trips.txt")
         stopTimes_df = self.manager.read_gtfs("stop_times.txt")
         calendar_df = self.manager.read_gtfs("calendar.txt")
@@ -175,8 +188,10 @@ class BusSim:
             calendar_df['start_date'], format='%Y%m%d')
         calendar_df['end_date'] = pd.to_datetime(
             calendar_df['end_date'], format='%Y%m%d')
-        calendar_filtered_df = calendar_df[self._is_service_valid(
-            calendar_df[self.day], calendar_df["service_id"])]
+#         calendar_filtered_df = calendar_df[self._is_service_valid(
+#             calendar_df[self.day], calendar_df["service_id"])]
+        calendar_filtered_df = calendar_df[self._is_day_valid(calendar_df[self.day])]
+        # print(calendar_df)
         service_ids = calendar_filtered_df["service_id"].tolist()
 
         # get valid trips
@@ -185,8 +200,10 @@ class BusSim:
         # get valid stop_times
         stopTimes_filtered_df = trips_df.merge(
             stopTimes_df, on="trip_id")
+#         stopTimes_merged_df = stopTimes_filtered_df.merge(stops_df, on="stop_id")[
+#             ["service_id", "route_short_name", "trip_id", "stop_id", "stop_sequence", "arrival_time", "shape_dist_traveled", "stop_x", "stop_y", "cardinal_direction"]]
         stopTimes_merged_df = stopTimes_filtered_df.merge(stops_df, on="stop_id")[
-            ["service_id", "route_short_name", "trip_id", "stop_id", "stop_sequence", "arrival_time", "shape_dist_traveled", "stop_x", "stop_y", "cardinal_direction"]]
+            ["service_id", "trip_id", "route_id", "stop_id", "stop_sequence", "arrival_time", "stop_x", "stop_y"]]
 
         # get stop_times within the time frame
         stopTimes_merged_df['arrival_time'] = pd.to_timedelta(
@@ -205,9 +222,9 @@ class BusSim:
     def get_available_route(self):
         return self.stopTimes_final_df["route_short_name"].unique()
 
-    def _is_service_valid(self, day, service_id):
-        # FIXME: hardcode in the service to be 95, just pick the first service id
-        return (day == 1) & (service_id.str.startswith("95"))
+    def _is_day_valid(self, day):
+        # return the valid calender in a specific day
+        return (day == 1)
 
     def _get_valid_stopTime(self, df, start_time, elapse_time):
         start_time = pd.to_timedelta(start_time)
