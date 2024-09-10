@@ -1,5 +1,5 @@
 from datetime import timedelta
-from math import sin, cos, asin, sqrt, pi, ceil, floor
+from math import sin, cos, asin, sqrt, pi, ceil, floor, radians, atan2
 from collections import defaultdict
 import heapq
 import pandas as pd
@@ -28,26 +28,8 @@ class Node:
     def distance(self, other):
         return sqrt((other.stop_x - self.stop_x)**2 + (other.stop_y - self.stop_y)**2)
 
-    # Deprecated
-    def harversine_distance(self, other):
-        """Calculates the distance between two points on earth using the
-        harversine distance (distance between points on a sphere)
-        See: https://en.wikipedia.org/wiki/Haversine_formula
-
-        :return: distance in meters between points
-        """
-
-        lat1, lon1, lat2, lon2 = (
-            a/180*pi for a in [self.stop_lat, self.stop_lon, other.stop_lat, other.stop_lon])
-        dlon = lon2 - lon1
-        dlat = lat2 - lat1
-        a = sin(dlat/2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon/2) ** 2
-        c = 2 * asin(min(1, sqrt(a)))
-        d = 3956 * 1609.344 * c
-        return d
-
     def __str__(self):
-        return f"({self.trip_id}, {self.route_short_name}, {self.stop_sequence}, {self.stop_id}, {self.arrival_time}, {self.walking_distance}"
+        return f"({self.trip_id}, {self.route_short_name}, {self.stop_sequence}, {self.stop_id}, {self.arrival_time}, {self.walking_distance}, {self.stop_x}, {self.stop_y})"
 
     def __repr__(self):
         rv = self.__str__()
@@ -128,6 +110,60 @@ class Graph:
         stops_radius_list = [row for row in stops_radius_dict.values()]
         return stops_radius_list
 
+    def haversine(self, lat1, lon1, lat2, lon2):
+        # Radius of Earth in meters
+        R = 6371000
+        
+        # Convert latitude and longitude from degrees to radians
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+        lat1 = radians(lat1)
+        lat2 = radians(lat2)
+        
+        # Haversine formula
+        a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        
+        # Distance in meters
+        return R * c
+
+    def get_bounding_box(self, lat, lon, distance):
+        # Earth's radius in meters
+        R = 6371000  
+        
+        # Convert distance from meters to degrees (approximate)
+        lat_delta = distance / R * (180 / 3.14159)
+        lon_delta = distance / (R * cos(radians(lat))) * (180 / 3.14159)
+        
+        # Calculate the bounding box
+        min_lat = lat - lat_delta
+        max_lat = lat + lat_delta
+        min_lon = lon - lon_delta
+        max_lon = lon + lon_delta
+    
+        return (min_lat, max_lat, min_lon, max_lon)
+
+    def filter_stops_in_bounding_box(self, stops, lat, lon, distance):
+        # Get bounding box coordinates
+        min_lat, max_lat, min_lon, max_lon = self.get_bounding_box(lat, lon, distance)
+        
+        # Filter stops within the bounding box
+        return [stop for stop in stops if min_lat <= stop.stop_y <= max_lat and min_lon <= stop.stop_x <= max_lon]
+
+    def get_walkable_stops(self, stops, curr_stop, max_distance, avg_walking_speed):
+        # Filter stops inside the bounding box first
+        candidate_stops = self.filter_stops_in_bounding_box(stops, curr_stop.stop_y, curr_stop.stop_x, max_distance)
+        
+        # Filter based on the exact distance using Haversine formula
+        for stop in candidate_stops:
+            distance = self.haversine(curr_stop.stop_y, curr_stop.stop_x, stop.stop_y, stop.stop_x)
+            # make sure person can walk to the stop in time (assuming the latest we leave is when the bus at the stop we're currently at arrives) 
+            time_delta = distance / avg_walking_speed
+            time_delta = timedelta(seconds=time_delta)
+            if distance <= max_distance and curr_stop.arrival_time + time_delta <= stop.arrival_time:
+                curr_stop.children.append(NodeCostPair(stop, distance))
+                curr_stop.children_ids.add(stop.id)
+
     def _clear_graph(self):
         for node in self.nodes:
             node.walking_distance = self.max_walking_distance
@@ -203,52 +239,7 @@ class Graph:
                     node.children_ids.add(right_node.id)
                     right_node.children_ids.add(node.id)
         # print(f'building walk cost {time()-time0}')
-            
 
-    # new version
-    def _constuct_graph_new(self):
-        if len(self.df) == 0:
-            self.empty = True
-            return
-
-        # gen nodes
-        trip_node_dict = defaultdict(list)
-        stop_node_dict = defaultdict(list)
-
-        for index, row in self.df.iterrows():
-            node = Node(row["trip_id"], row["route_id"], row["stop_sequence"], row["stop_id"], row["stop_x"],
-                        row["stop_y"], row["arrival_time"], self.max_walking_distance, index)
-            self.nodes.append(node)
-            trip_node_dict[row["trip_id"]].append(node)
-            stop_node_dict[row["stop_id"]].append(node)
-
-        # gen edges
-        # direct sequence
-        # forms connection in each trip, with start being the first.
-        for trip_id, nodes in trip_node_dict.items():
-            for i in range(len(nodes)-1):
-                start = nodes[i]
-                end = nodes[i+1]
-                nodeCostPair = NodeCostPair(end, 0)
-                start.children.append(nodeCostPair)
-                start.children_ids.add(end.id)
-
-        # wait on stop: new version (by Charles)
-        time0= time()
-        for stop_id, nodes in stop_node_dict.items():
-            for node in nodes:
-                node.children.extend([NodeCostPair(n, 0) for n in filter(lambda n: n.arrival_time>node.arrival_time, nodes)])
-        # print(f'new time for reducted triple for loop {time() - time0}')
-
-        # walk (Charles's version)
-        time0 = time()
-        self.nodes.sort(key=lambda node: node.stop_x)
-        for index, node in enumerate(self.nodes):
-            node.index = index
-        time1 = time()
-        # print(f'time for sort nodes {time1-time0}')
-
-    # OLDversion
     def _constuct_graph(self):
         if len(self.df) == 0:
             self.empty = True
@@ -258,35 +249,12 @@ class Graph:
         trip_node_dict = defaultdict(list)
         stop_node_dict = defaultdict(list)
 
-        map_grid = []
-        min_x = self.df.stop_x.min()
-        max_x = self.df.stop_x.max()
-        min_y = self.df.stop_y.min()
-        max_y = self.df.stop_y.max()
-
-        x_num = ceil((max_x - min_x) / self.max_walking_distance)
-        y_num = ceil((max_y - min_y) / self.max_walking_distance)
-
-        # improvement? ok for now
-        for i in range(x_num):
-            x_list = []
-            for j in range(y_num):
-                x_list.append([])
-            map_grid.append(x_list)
-
         for index, row in self.df.iterrows():
             node = Node(row["trip_id"], row["route_id"], row["stop_sequence"], row["stop_id"], row["stop_x"],
                         row["stop_y"], row["arrival_time"], self.max_walking_distance, index)
             self.nodes.append(node)
             trip_node_dict[row["trip_id"]].append(node)
             stop_node_dict[row["stop_id"]].append(node)
-
-            # finding where the node is on the map_grid
-            x_bucket = floor((row["stop_x"] - min_x) /
-                             self.max_walking_distance)
-            y_bucket = floor((row["stop_y"] - min_y) /
-                             self.max_walking_distance)
-            map_grid[x_bucket][y_bucket].append(node)
 
         # gen edges
         # direct sequence
@@ -295,6 +263,7 @@ class Graph:
             for i in range(len(nodes)-1):
                 start = nodes[i]
                 end = nodes[i+1]
+                # cost shouldn't be 0 since it's a different stop
                 nodeCostPair = NodeCostPair(end, 0)
                 start.children.append(nodeCostPair)
                 start.children_ids.add(end.id)
@@ -311,33 +280,11 @@ class Graph:
                         nodeCostPair = NodeCostPair(end, 0)
                         start.children.append(nodeCostPair)
                         start.children_ids.add(end.id)
-        # print(f'time cost for first origin triple loop {time()-time0}')
 
         # walk 
         # add node that are reacheable through walking to its children
-        for x in range(x_num):
-            for y in range(y_num):
-                start_bucket = map_grid[x][y]
-                end_buckets = []
-                # following should be linear time, since x range and y range is fixed to most at 3
-                for x_end in range(max(0, x-1), min(x_num, x+2)):
-                    for y_end in range(max(0, y-1), min(y_num, y+2)):
-                        end_buckets.append(map_grid[x_end][y_end])
-
-                for start in start_bucket:
-                    for end_bucket in end_buckets:
-                        for end in end_bucket:
-                            if start.arrival_time >= end.arrival_time or start.stop_id == end.stop_id:
-                                continue
-
-                            # walk
-                            distance = start.distance(end)
-                            time_delta = distance / self.avg_walking_speed
-                            time_delta = timedelta(seconds=time_delta)
-                            if distance < self.max_walking_distance and start.arrival_time + time_delta < end.arrival_time:
-                                nodeCostPair = NodeCostPair(end, distance)
-                                start.children.append(nodeCostPair)
-                                start.children_ids.add(end.id)
+        for node in self.nodes:
+            self.get_walkable_stops(self.nodes, node, self.max_walking_distance, self.avg_walking_speed)
 
     def _find_neighbour_nodes(self, start_node, radius):
         self.nodes = sorted(self.nodes, key=lambda node: node.stop_x)

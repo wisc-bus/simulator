@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 with open("requirements.txt", "r", encoding="utf-8") as fh:
     install_requires = fh.read()
     install_requires = install_requires.split("\n")
-    install_requires = list(filter(lambda x: x[0] != "#", install_requires))
+    install_requires = list(filter(lambda x: x[:1] != "#", install_requires))
 
 setuptools.setup(
     name="SCanalyzer",

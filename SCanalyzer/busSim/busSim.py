@@ -52,6 +52,7 @@ class BusSim:
         if max_walking_min == -1:
             max_walking_min = elapse_time
         self.max_walking_min = max_walking_min
+        # avg_walking_speed is in meters/sec. Multiply by 60 to get meters walked in a minute on average. Multiply by max_walking_min to find max meters someone will walk
         self.max_walking_distance = max_walking_min * 60.0 * avg_walking_speed
         self.stopTimes_final_df = self._gen_final_df(trip_delays)
         self.graph = Graph(self.stopTimes_final_df, start_time,
@@ -171,7 +172,8 @@ class BusSim:
     def _gen_final_df(self, trip_delays):
         self._logger.debug("Start generating dataframe")
 
-        stops_df = self.manager.read_gtfs("stops_meter.txt")
+        stops_df = self.manager.read_gtfs("stops.txt")
+        # stops_df = self.manager.read_gtfs("stops_meter.txt")
         # for i in range(len(stops_df)):
         #     x,y = transform(float(stops_df.iloc[i]['stop_lat']), float(stops_df.iloc[i]['stop_lon']))
         #     #print(f"lat = {float(stops_df.iloc[i]['stop_lat'])}, lon = {float(stops_df.iloc[i]['stop_lon'])}")
@@ -202,8 +204,8 @@ class BusSim:
             stopTimes_df, on="trip_id")
 #         stopTimes_merged_df = stopTimes_filtered_df.merge(stops_df, on="stop_id")[
 #             ["service_id", "route_short_name", "trip_id", "stop_id", "stop_sequence", "arrival_time", "shape_dist_traveled", "stop_x", "stop_y", "cardinal_direction"]]
-        stopTimes_merged_df = stopTimes_filtered_df.merge(stops_df, on="stop_id")[
-            ["service_id", "trip_id", "route_id", "stop_id", "stop_sequence", "arrival_time", "stop_x", "stop_y"]]
+        stopTimes_merged_df = (stopTimes_filtered_df.merge(stops_df, on="stop_id")[
+            ["service_id", "trip_id", "route_id", "stop_id", "stop_sequence", "arrival_time", "stop_lon", "stop_lat"]].rename(columns={"stop_lon": "stop_x", "stop_lat": "stop_y"}))
 
         # get stop_times within the time frame
         stopTimes_merged_df['arrival_time'] = pd.to_timedelta(
