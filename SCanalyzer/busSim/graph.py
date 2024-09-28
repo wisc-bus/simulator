@@ -36,6 +36,7 @@ class Node:
         rv += "\nChildren:\n"
         for child in self.children:
             rv += f"  cost: {child.cost} "
+            rv += f"  type: {child.type} "
             child = child.node
             rv += str(child)
             rv += "\n"
@@ -47,9 +48,10 @@ class Node:
 
 
 class NodeCostPair:
-    def __init__(self, node, cost):
+    def __init__(self, node, cost, type):
         self.node = node
         self.cost = cost  # the cost here means the walking distance
+        self.type = type
 
 
 class Graph:
@@ -160,8 +162,9 @@ class Graph:
             # make sure person can walk to the stop in time (assuming the latest we leave is when the bus at the stop we're currently at arrives) 
             time_delta = distance / avg_walking_speed
             time_delta = timedelta(seconds=time_delta)
-            if distance <= max_distance and curr_stop.arrival_time + time_delta <= stop.arrival_time:
-                curr_stop.children.append(NodeCostPair(stop, distance))
+            # make sure within distance, is not the same stop, and is reachable in time
+            if distance <= max_distance and int(time_delta.total_seconds()) != 0 and curr_stop.arrival_time + time_delta <= stop.arrival_time:
+                curr_stop.children.append(NodeCostPair(stop, time_delta, "WALK"))
                 curr_stop.children_ids.add(stop.id)
 
     def _clear_graph(self):
@@ -264,7 +267,7 @@ class Graph:
                 start = nodes[i]
                 end = nodes[i+1]
                 # cost shouldn't be 0 since it's a different stop
-                nodeCostPair = NodeCostPair(end, 0)
+                nodeCostPair = NodeCostPair(end, 0, "RIDE")
                 start.children.append(nodeCostPair)
                 start.children_ids.add(end.id)
 
@@ -277,7 +280,7 @@ class Graph:
                     start = nodes[i]
                     end = nodes[j]
                     if start.arrival_time < end.arrival_time:
-                        nodeCostPair = NodeCostPair(end, 0)
+                        nodeCostPair = NodeCostPair(end, 0, "STAY")
                         start.children.append(nodeCostPair)
                         start.children_ids.add(end.id)
 
